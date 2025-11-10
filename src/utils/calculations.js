@@ -132,3 +132,35 @@ export const calculateObservedSpeed = (distance, timeElapsed) => {
   const speedMs = distance / timeElapsed;
   return speedMs * 3.6;
 };
+
+/**
+ * Calcule la distance totale à partir du nombre de tours et de repères
+ * @param {number} laps - Nombre de tours complets
+ * @param {number} markers - Nombre de repères
+ * @param {number} trackLength - Longueur de piste en mètres
+ * @param {number} markerDistance - Distance entre repères en mètres
+ * @returns {number} Distance totale en mètres
+ */
+export const calculateDistanceFromLaps = (laps, markers, trackLength, markerDistance) => {
+  return (laps * trackLength) + (markers * markerDistance);
+};
+
+/**
+ * Génère un tableau d'allure simplifié (temps par tour uniquement)
+ * @param {number} lapTime - Temps par tour en secondes
+ * @param {number} maxLaps - Nombre maximum de tours à afficher
+ * @returns {Array} Tableau simplifié des temps par tour
+ */
+export const generateSimplePaceTable = (lapTime, maxLaps = 20) => {
+  const table = [];
+
+  for (let i = 1; i <= maxLaps; i++) {
+    table.push({
+      lap: i,
+      time: lapTime * i,
+      lapTime: lapTime
+    });
+  }
+
+  return table;
+};

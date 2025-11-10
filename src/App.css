@@ -61,6 +61,48 @@
   box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
 }
 
+/* Input avec unité */
+.input-with-unit {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.number-input {
+  flex: 1;
+  padding: var(--spacing-md);
+  padding-right: 50px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--color-text);
+  font-size: 1rem;
+  font-weight: 600;
+  transition: all 0.2s;
+  min-height: 48px;
+  -moz-appearance: textfield; /* Firefox */
+}
+
+.number-input::-webkit-inner-spin-button,
+.number-input::-webkit-outer-spin-button {
+  opacity: 1;
+  height: 40px;
+}
+
+.number-input:focus {
+  outline: none;
+  border-color: white;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+}
+
+.input-unit {
+  position: absolute;
+  right: 12px;
+  font-weight: 600;
+  color: var(--color-text-light);
+  pointer-events: none;
+}
+
 /* Contenu principal */
 .main-content {
   max-width: 1400px;
@@ -533,6 +575,114 @@
   background: #1e3a8a;
   transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
+}
+
+/* Formulaire de saisie de performance */
+.performance-form {
+  background: var(--color-background);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-md);
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.form-group label {
+  font-weight: 600;
+  color: var(--color-text);
+  font-size: 0.95rem;
+}
+
+.form-input {
+  padding: var(--spacing-md);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  font-weight: 600;
+  transition: border-color 0.2s;
+  min-height: 48px;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.form-input::placeholder {
+  color: var(--color-text-light);
+  font-weight: 400;
+}
+
+/* Boîte de bilan */
+.assessment-box {
+  padding: var(--spacing-lg);
+  border-radius: var(--radius-md);
+  border-left: 6px solid;
+}
+
+.assessment-box.blue {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border-left-color: var(--color-blue);
+}
+
+.assessment-box.green {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border-left-color: var(--color-green);
+}
+
+.assessment-box.yellow {
+  background: linear-gradient(135deg, #fefce8 0%, #fef3c7 100%);
+  border-left-color: var(--color-yellow);
+}
+
+.assessment-box.red {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border-left-color: var(--color-red);
+}
+
+.assessment-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.assessment-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-sm) 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.assessment-row .label {
+  font-weight: 500;
+  color: var(--color-text-light);
+}
+
+.assessment-row .value {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--color-text);
+}
+
+.assessment-appreciation {
+  margin-top: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  text-align: center;
+  font-size: 1.05rem;
+  color: var(--color-text);
 }
 
 /* Responsive - Tablette portrait */

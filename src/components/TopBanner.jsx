@@ -8,16 +8,9 @@ import React from 'react';
  */
 const TopBanner = ({ trackLength, setTrackLength, vma, setVma, markerDistance, setMarkerDistance }) => {
   // Options pour les sélecteurs
+  const trackLengthOptions = Array.from({ length: 71 }, (_, i) => 50 + i * 5); // 50 à 400m par pas de 5m
   const vmaOptions = Array.from({ length: 49 }, (_, i) => 8 + i * 0.25); // 8 à 20 km/h par pas de 0.25
   const markerDistanceOptions = Array.from({ length: 10 }, (_, i) => 5 + i * 5); // 5 à 50m
-
-  const handleTrackLengthChange = (e) => {
-    const value = Number(e.target.value);
-    // Validation : multiple de 5, entre 50 et 500
-    if (value >= 50 && value <= 500 && value % 5 === 0) {
-      setTrackLength(value);
-    }
-  };
 
   return (
     <div className="top-banner">
@@ -27,19 +20,15 @@ const TopBanner = ({ trackLength, setTrackLength, vma, setVma, markerDistance, s
             <span className="label-icon">🏃</span>
             <span>Longueur piste</span>
           </label>
-          <div className="input-with-unit">
-            <input
-              type="number"
-              id="track-length"
-              value={trackLength}
-              onChange={handleTrackLengthChange}
-              min="50"
-              max="500"
-              step="5"
-              className="number-input"
-            />
-            <span className="input-unit">m</span>
-          </div>
+          <select
+            id="track-length"
+            value={trackLength}
+            onChange={(e) => setTrackLength(Number(e.target.value))}
+          >
+            {trackLengthOptions.map(length => (
+              <option key={length} value={length}>{length} m</option>
+            ))}
+          </select>
         </div>
 
         <div className="selector-group">

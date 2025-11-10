@@ -86,6 +86,29 @@ const CenterPanel = ({
     }
   };
 
+  const handleUndoLap = () => {
+    if (lapHistory.length === 0) return;
+
+    // Retirer le dernier passage
+    const newHistory = lapHistory.slice(0, -1);
+    setLapHistory(newHistory);
+
+    // Réajuster lastLapTime
+    if (newHistory.length > 0) {
+      const previousLap = newHistory[newHistory.length - 1];
+      setLastLapTime(previousLap.timestamp);
+      setCurrentColor(previousLap.color);
+    } else {
+      setLastLapTime(0);
+      setCurrentColor('gray');
+    }
+
+    // Vibration haptique différente pour l'annulation
+    if ('vibrate' in navigator) {
+      navigator.vibrate([100, 50, 100]);
+    }
+  };
+
   const getColorClass = (color) => {
     const colorMap = {
       blue: 'btn-blue',
@@ -163,6 +186,17 @@ const CenterPanel = ({
             </span>
           )}
         </button>
+
+        {/* Bouton d'annulation */}
+        {isRunning && lapHistory.length > 0 && (
+          <button
+            className="btn-undo"
+            onClick={handleUndoLap}
+            title="Annuler le dernier passage"
+          >
+            ↶ Annuler dernier passage
+          </button>
+        )}
       </div>
 
       {/* Historique des passages */}

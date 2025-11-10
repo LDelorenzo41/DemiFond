@@ -27,9 +27,11 @@ const RightPanel = ({ trackLength, markerDistance, vma, vmaPercent, duration, is
   const expectedMarkers = calculateMarkers(remainingMeters, markerDistance);
 
   // Générer le tableau d'allures simplifié (temps par tour)
+  // Limité à objectif + 1 tour
   const paceTable = useMemo(() => {
-    return generateSimplePaceTable(lapTime, 20);
-  }, [lapTime]);
+    const maxLaps = Math.max(expectedLaps + 1, 3); // Minimum 3 tours pour avoir quelque chose à afficher
+    return generateSimplePaceTable(lapTime, maxLaps);
+  }, [lapTime, expectedLaps]);
 
   // Calculer le bilan si on a saisi des données
   const assessment = useMemo(() => {
@@ -41,6 +43,10 @@ const RightPanel = ({ trackLength, markerDistance, vma, vmaPercent, duration, is
     const actualDistance = calculateDistanceFromLaps(laps, markers, trackLength, markerDistance);
     const distanceDiff = actualDistance - expectedDistance;
     const percentDiff = (distanceDiff / expectedDistance) * 100;
+
+    // Calculer la vitesse réelle (distance en m, durée en minutes)
+    const actualSpeed = (actualDistance / 1000) / duration * 60; // km/h
+    const speedDiff = actualSpeed - targetSpeed;
 
     // Déterminer l'appréciation
     let appreciation = '';
@@ -66,6 +72,9 @@ const RightPanel = ({ trackLength, markerDistance, vma, vmaPercent, duration, is
       expectedDistance,
       distanceDiff,
       percentDiff,
+      actualSpeed,
+      targetSpeed,
+      speedDiff,
       appreciation,
       color
     };
@@ -215,10 +224,17 @@ const RightPanel = ({ trackLength, markerDistance, vma, vmaPercent, duration, is
               <span className="value">{Math.round(assessment.actualDistance)} m</span>
             </div>
             <div className="assessment-row">
-              <span className="label">Écart:</span>
+              <span className="label">Écart distance:</span>
               <span className="value">
                 {assessment.distanceDiff > 0 ? '+' : ''}
                 {Math.round(assessment.distanceDiff)} m ({assessment.percentDiff.toFixed(1)}%)
+              </span>
+            </div>
+            <div className="assessment-row">
+              <span className="label">Vitesse réelle:</span>
+              <span className="value">
+                {assessment.actualSpeed.toFixed(2)} km/h
+                ({assessment.speedDiff > 0 ? '+' : ''}{assessment.speedDiff.toFixed(2)} km/h)
               </span>
             </div>
             <div className="assessment-appreciation">

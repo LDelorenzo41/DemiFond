@@ -8,7 +8,7 @@ import React from 'react';
  */
 const TopBanner = ({ trackLength, setTrackLength, vma, setVma, markerDistance, setMarkerDistance }) => {
   // Options pour les sélecteurs
-  const vmaOptions = Array.from({ length: 25 }, (_, i) => 8 + i * 0.5); // 8 à 20 km/h
+  const vmaOptions = Array.from({ length: 49 }, (_, i) => 8 + i * 0.25); // 8 à 20 km/h par pas de 0.25
   const markerDistanceOptions = Array.from({ length: 10 }, (_, i) => 5 + i * 5); // 5 à 50m
 
   const handleTrackLengthChange = (e) => {

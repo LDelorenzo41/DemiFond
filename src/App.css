@@ -366,6 +366,32 @@
   opacity: 0.9;
 }
 
+/* Bouton d'annulation */
+.btn-undo {
+  width: 100%;
+  padding: var(--spacing-md);
+  margin-top: var(--spacing-md);
+  background: var(--color-red);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 48px;
+}
+
+.btn-undo:hover {
+  background: #dc2626;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn-undo:active {
+  transform: scale(0.98);
+}
+
 .btn-blue {
   background: linear-gradient(135deg, var(--color-blue) 0%, #2563eb 100%);
 }
@@ -603,6 +629,7 @@
 }
 
 .form-input {
+  width: 100%;
   padding: var(--spacing-md);
   border: 2px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -610,6 +637,14 @@
   font-weight: 600;
   transition: border-color 0.2s;
   min-height: 48px;
+  box-sizing: border-box;
+  -moz-appearance: textfield;
+}
+
+.form-input::-webkit-inner-spin-button,
+.form-input::-webkit-outer-spin-button {
+  opacity: 1;
+  height: 40px;
 }
 
 .form-input:focus {
@@ -725,6 +760,10 @@
 
   .speed-button-text {
     font-size: 1.2rem;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
   }
 }
 

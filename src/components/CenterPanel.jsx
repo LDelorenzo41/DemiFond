@@ -28,6 +28,21 @@ const CenterPanel = ({
 
   const targetSpeed = calculateTargetSpeed(vma, vmaPercent);
   const observationDistance = isHalfLap ? trackLength / 2 : trackLength;
+  const targetLapTime = calculateLapTime(trackLength, targetSpeed, isHalfLap);
+
+  // Calcul de la progression du tour actuel
+  const currentLapTime = elapsedTime - lastLapTime;
+  const progressPercent = (currentLapTime / targetLapTime) * 100;
+
+  // Déterminer le statut de l'allure
+  const getTimingStatus = () => {
+    if (!isRunning || isPaused) return 'waiting';
+    if (progressPercent < 98) return 'early'; // En avance
+    if (progressPercent > 102) return 'late'; // En retard
+    return 'ontime'; // À l'heure (dans la marge de 2%)
+  };
+
+  const timingStatus = getTimingStatus();
 
   // Réinitialisation quand les paramètres changent
   useEffect(() => {
@@ -169,6 +184,36 @@ const CenterPanel = ({
           </button>
         )}
       </div>
+
+      {/* Barre de progression du tour */}
+      {isRunning && !isPaused && (
+        <div className="lap-progress-container">
+          <div className="lap-progress-header">
+            <span className="lap-progress-label">Progression du tour</span>
+            <span className="lap-progress-time">{formatTime(currentLapTime)} / {formatTime(targetLapTime)}</span>
+          </div>
+          <div className="lap-progress-bar-wrapper">
+            <div
+              className={`lap-progress-bar ${timingStatus}`}
+              style={{ width: `${Math.min(progressPercent, 100)}%` }}
+            >
+              <div className="lap-progress-shine"></div>
+            </div>
+            {progressPercent > 100 && (
+              <div
+                className="lap-progress-bar-overflow"
+                style={{ width: `${Math.min(progressPercent - 100, 20)}%` }}
+              ></div>
+            )}
+          </div>
+          <div className={`lap-progress-status ${timingStatus}`}>
+            {timingStatus === 'early' && '⚡ En avance - Ralentir légèrement'}
+            {timingStatus === 'ontime' && '✓ Parfait - Maintenir l\'allure'}
+            {timingStatus === 'late' && '⚠️ En retard - Accélérer'}
+            {timingStatus === 'waiting' && 'En attente...'}
+          </div>
+        </div>
+      )}
 
       {/* Gros bouton INFO VITESSE */}
       <div className="speed-button-container">

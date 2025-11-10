@@ -3,23 +3,73 @@ import {
   calculateTargetSpeed,
   calculateLapTime,
   formatTime,
-  generatePaceTable
+  generateSimplePaceTable,
+  calculateTotalDistance,
+  calculateLaps,
+  calculateMarkers,
+  calculateDistanceFromLaps
 } from '../utils/calculations';
 
 /**
  * Composant : Panneau droit - Tableau d'allure et bilan
  */
-const RightPanel = ({ trackLength, markerDistance, vma, vmaPercent, isHalfLap, lapData }) => {
+const RightPanel = ({ trackLength, markerDistance, vma, vmaPercent, duration, isHalfLap, lapData }) => {
   const [notes, setNotes] = useState('');
+  const [actualLaps, setActualLaps] = useState('');
+  const [actualMarkers, setActualMarkers] = useState('');
 
   const targetSpeed = calculateTargetSpeed(vma, vmaPercent);
-  const lapTime = calculateLapTime(trackLength, targetSpeed, isHalfLap);
-  const observationDistance = isHalfLap ? trackLength / 2 : trackLength;
+  const lapTime = calculateLapTime(trackLength, targetSpeed, false); // Toujours par tour complet pour le tableau
 
-  // Générer le tableau d'allures
+  // Calculs de l'objectif
+  const expectedDistance = calculateTotalDistance(targetSpeed, duration);
+  const { fullLaps: expectedLaps, remainingMeters } = calculateLaps(expectedDistance, trackLength);
+  const expectedMarkers = calculateMarkers(remainingMeters, markerDistance);
+
+  // Générer le tableau d'allures simplifié (temps par tour)
   const paceTable = useMemo(() => {
-    return generatePaceTable(trackLength, markerDistance, lapTime, isHalfLap);
-  }, [trackLength, markerDistance, lapTime, isHalfLap]);
+    return generateSimplePaceTable(lapTime, 20);
+  }, [lapTime]);
+
+  // Calculer le bilan si on a saisi des données
+  const assessment = useMemo(() => {
+    const laps = parseInt(actualLaps) || 0;
+    const markers = parseInt(actualMarkers) || 0;
+
+    if (laps === 0 && markers === 0) return null;
+
+    const actualDistance = calculateDistanceFromLaps(laps, markers, trackLength, markerDistance);
+    const distanceDiff = actualDistance - expectedDistance;
+    const percentDiff = (distanceDiff / expectedDistance) * 100;
+
+    // Déterminer l'appréciation
+    let appreciation = '';
+    let color = '';
+    if (percentDiff >= -2 && percentDiff <= 2) {
+      appreciation = 'Excellent ! Objectif parfaitement atteint';
+      color = 'blue';
+    } else if (percentDiff >= -5 && percentDiff <= 5) {
+      appreciation = 'Très bien ! Objectif quasiment atteint';
+      color = 'green';
+    } else if (percentDiff >= -10 && percentDiff <= 10) {
+      appreciation = 'Bien, mais il y a une marge de progression';
+      color = 'yellow';
+    } else {
+      appreciation = distanceDiff > 0
+        ? 'Attention : allure trop élevée pour l\'objectif'
+        : 'Attention : objectif non atteint, allure à revoir';
+      color = 'red';
+    }
+
+    return {
+      actualDistance,
+      expectedDistance,
+      distanceDiff,
+      percentDiff,
+      appreciation,
+      color
+    };
+  }, [actualLaps, actualMarkers, expectedDistance, trackLength, markerDistance]);
 
   // Calculer les statistiques si on a des données
   const stats = useMemo(() => {
@@ -52,8 +102,20 @@ const RightPanel = ({ trackLength, markerDistance, vma, vmaPercent, isHalfLap, l
         vma,
         vmaPercent,
         targetSpeed: targetSpeed.toFixed(1),
+        duration,
         isHalfLap
       },
+      expected: {
+        distance: expectedDistance,
+        laps: expectedLaps,
+        markers: expectedMarkers
+      },
+      actual: assessment ? {
+        laps: parseInt(actualLaps),
+        markers: parseInt(actualMarkers),
+        distance: assessment.actualDistance,
+        appreciation: assessment.appreciation
+      } : null,
       paceTable,
       lapData,
       stats,
@@ -76,35 +138,95 @@ const RightPanel = ({ trackLength, markerDistance, vma, vmaPercent, isHalfLap, l
 
       <div className="pace-info">
         <p>
-          <strong>Temps par {isHalfLap ? 'demi-tour' : 'tour'}:</strong>{' '}
-          {formatTime(lapTime)}
+          <strong>Temps par tour:</strong> {formatTime(lapTime)}
         </p>
         <p>
           <strong>Vitesse cible:</strong> {targetSpeed.toFixed(1)} km/h
         </p>
+        <p>
+          <strong>Objectif:</strong> {expectedLaps} tours + {expectedMarkers} repères
+        </p>
       </div>
 
-      {/* Tableau des allures */}
+      {/* Tableau des allures simplifié */}
       <div className="pace-table-container">
         <table className="pace-table">
           <thead>
             <tr>
-              <th>Repère</th>
-              <th>Distance (m)</th>
-              <th>Temps</th>
+              <th>Tour</th>
+              <th>Temps tour</th>
+              <th>Temps cumulé</th>
             </tr>
           </thead>
           <tbody>
-            {paceTable.map((row, index) => (
-              <tr key={index}>
-                <td>{row.marker}</td>
-                <td>{row.distance.toFixed(0)}</td>
+            {paceTable.map((row) => (
+              <tr key={row.lap}>
+                <td>{row.lap}</td>
+                <td>{formatTime(row.lapTime)}</td>
                 <td>{formatTime(row.time)}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      {/* Formulaire de saisie de la performance réelle */}
+      <div className="performance-form">
+        <h3>📝 Saisie de la performance réelle</h3>
+        <div className="form-grid">
+          <div className="form-group">
+            <label htmlFor="actual-laps">Nombre de tours</label>
+            <input
+              type="number"
+              id="actual-laps"
+              value={actualLaps}
+              onChange={(e) => setActualLaps(e.target.value)}
+              min="0"
+              placeholder="0"
+              className="form-input"
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="actual-markers">Nombre de repères</label>
+            <input
+              type="number"
+              id="actual-markers"
+              value={actualMarkers}
+              onChange={(e) => setActualMarkers(e.target.value)}
+              min="0"
+              placeholder="0"
+              className="form-input"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Bilan comparatif */}
+      {assessment && (
+        <div className={`assessment-box ${assessment.color}`}>
+          <h3>📊 Bilan</h3>
+          <div className="assessment-content">
+            <div className="assessment-row">
+              <span className="label">Distance attendue:</span>
+              <span className="value">{Math.round(assessment.expectedDistance)} m</span>
+            </div>
+            <div className="assessment-row">
+              <span className="label">Distance réalisée:</span>
+              <span className="value">{Math.round(assessment.actualDistance)} m</span>
+            </div>
+            <div className="assessment-row">
+              <span className="label">Écart:</span>
+              <span className="value">
+                {assessment.distanceDiff > 0 ? '+' : ''}
+                {Math.round(assessment.distanceDiff)} m ({assessment.percentDiff.toFixed(1)}%)
+              </span>
+            </div>
+            <div className="assessment-appreciation">
+              {assessment.appreciation}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Statistiques en temps réel */}
       {stats && (

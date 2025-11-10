@@ -65,6 +65,7 @@ function App() {
           markerDistance={markerDistance}
           vma={vma}
           vmaPercent={vmaPercent}
+          duration={duration}
           isHalfLap={isHalfLap}
           lapData={lapData}
         />

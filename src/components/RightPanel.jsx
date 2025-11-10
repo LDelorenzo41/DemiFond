@@ -279,8 +279,8 @@ const RightPanel = ({ trackLength, markerDistance, vma, vmaPercent, duration, is
         </div>
       )}
 
-      {/* Zone de notes */}
-      <div className="notes-section">
+      {/* Zone de notes - Temporairement masquée */}
+      {/* <div className="notes-section">
         <h3>📝 Notes personnelles</h3>
         <textarea
           className="notes-textarea"
@@ -289,12 +289,12 @@ const RightPanel = ({ trackLength, markerDistance, vma, vmaPercent, duration, is
           placeholder="Conditions météo, ressenti, observations..."
           rows={4}
         />
-      </div>
+      </div> */}
 
-      {/* Bouton d'export */}
-      <button className="btn-export" onClick={exportData}>
+      {/* Bouton d'export - Temporairement masqué */}
+      {/* <button className="btn-export" onClick={exportData}>
         💾 Exporter les données
-      </button>
+      </button> */}
     </div>
   );
 };

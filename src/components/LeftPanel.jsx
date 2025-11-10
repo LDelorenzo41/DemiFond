@@ -19,7 +19,7 @@ const LeftPanel = ({
   markerDistance
 }) => {
   // Options pour les sélecteurs
-  const durationOptions = Array.from({ length: 29 }, (_, i) => 1 + i * 0.5); // 1 à 15 min par pas de 0.5
+  const durationOptions = [0.5, ...Array.from({ length: 29 }, (_, i) => 1 + i * 0.5)]; // 30s à 15 min
   const vmaPercentOptions = Array.from({ length: 61 }, (_, i) => 60 + i); // 60% à 120%
 
   // Calculs pour le résumé

@@ -7,31 +7,32 @@ Application web progressive (PWA) pour le suivi d'allure de course à pied, con�
 ### Interface en 3 zones
 
 1. **Bandeau supérieur** (sticky)
-   - 🏃 Longueur de piste : 50m à 400m (par pas de 50m)
-   - ⚡ VMA du coureur : 8 à 20 km/h (par pas de 0,5 km/h)
+   - 🏃 Longueur de piste : 50m à 500m (par pas de 5m)
+   - ⚡ VMA du coureur : 8 à 20 km/h (par pas de 0,25 km/h)
    - 📍 Distance entre repères : 5m à 50m (par pas de 5m)
 
 2. **Panneau gauche - Paramètres**
-   - ⏱️ Temps de course : 1 à 15 minutes (par pas de 30s)
+   - ⏱️ Temps de course : 30 secondes à 15 minutes (par pas de 30s)
    - 📊 % de VMA : 60% à 120%
    - Résumé automatique (distance, tours, repères)
    - Légende des couleurs d'allure
 
 3. **Panneau central - Course en direct**
    - ⏰ Chronomètre + compte à rebours
+   - 📊 Barre de progression dynamique avec guidage visuel
    - Choix tour/demi-tour
    - Bouton tactile "INFO VITESSE" avec retour couleur :
      - 🔵 Bleu : écart ≤ 0,1 km/h (objectif atteint)
      - 🟢 Vert : écart ≤ 0,5 km/h (objectif presque atteint)
      - 🟡 Jaune : écart ≤ 1 km/h (allure à travailler)
      - 🔴 Rouge : écart > 1 km/h (objectif inadapté)
+   - Bouton d'annulation du dernier passage
    - Historique des 5 derniers passages
 
 4. **Panneau droit - Analyse**
-   - 📋 Tableau d'allure automatique
+   - 📋 Tableau d'allure simplifié (limité à objectif + 1 tour)
    - 📊 Statistiques temps réel
-   - 📝 Zone de notes personnelles
-   - 💾 Export des données (JSON)
+   - 💾 Bilan comparatif avec vitesse réelle
 
 ### Capacités PWA
 
@@ -65,11 +66,32 @@ npm run preview
 
 ### Déploiement
 
-L'application peut être déployée sur :
-- **Vercel** : `vercel --prod`
-- **Netlify** : Glisser-déposer le dossier `dist/`
+#### Déploiement sur Netlify (Recommandé)
+
+1. **Via l'interface Netlify**
+   - Connectez votre repo GitHub à https://app.netlify.com/
+   - La configuration est automatique grâce à `netlify.toml`
+   - Le site sera déployé et mis à jour automatiquement à chaque push
+
+2. **Via Netlify CLI**
+   ```bash
+   npm install -g netlify-cli
+   netlify login
+   netlify deploy --prod
+   ```
+
+3. **Via drag & drop**
+   ```bash
+   npm run build
+   # Puis glissez-déposez le dossier dist/ sur https://app.netlify.com/drop
+   ```
+
+📖 **Guide complet** : Voir [DEPLOY.md](./DEPLOY.md)
+
+#### Autres plateformes
+- **Vercel** : Support PWA complet
 - **GitHub Pages** : Via GitHub Actions
-- Tout hébergeur de fichiers statiques
+- **Tout hébergeur de fichiers statiques** avec support HTTPS
 
 ## 📱 Utilisation sur le terrain
 

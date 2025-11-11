@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useImperativeHandle, forwardRef } from 'react';
 import { useTimer } from '../hooks/useTimer';
 import {
   formatTime,
@@ -11,13 +11,14 @@ import {
 /**
  * Composant : Panneau central - Gestion de la course en direct
  */
-const CenterPanel = ({
+const CenterPanel = forwardRef(({
   duration,
   vma,
   vmaPercent,
   trackLength,
-  onLapData
-}) => {
+  onLapData,
+  onResetLapData
+}, ref) => {
   const [isHalfLap, setIsHalfLap] = useState(false);
   const [lapHistory, setLapHistory] = useState([]);
   const [lastLapTime, setLastLapTime] = useState(0);
@@ -44,21 +45,32 @@ const CenterPanel = ({
 
   const timingStatus = getTimingStatus();
 
-  // Réinitialisation quand les paramètres changent
-  useEffect(() => {
-    if (!isRunning) {
+  // Exposer une fonction de reset au parent via ref
+  useImperativeHandle(ref, () => ({
+    resetHistory: () => {
       setLapHistory([]);
       setLastLapTime(0);
       setCurrentColor('gray');
+      reset();
+      if (onResetLapData) {
+        onResetLapData([]);
+      }
     }
-  }, [duration, vma, vmaPercent, trackLength, isHalfLap, isRunning]);
+  }));
 
   const handleStartStop = () => {
     if (!isRunning) {
+      // Démarrer une nouvelle course
       start();
       setLapHistory([]);
       setLastLapTime(0);
+      setCurrentColor('gray');
+      // Réinitialiser les données dans le parent
+      if (onResetLapData) {
+        onResetLapData([]);
+      }
     } else {
+      // Arrêter la course (mais garder l'historique)
       reset();
     }
   };
@@ -116,6 +128,11 @@ const CenterPanel = ({
     } else {
       setLastLapTime(0);
       setCurrentColor('gray');
+    }
+
+    // Mettre à jour les données dans le parent
+    if (onResetLapData) {
+      onResetLapData(newHistory);
     }
 
     // Vibration haptique différente pour l'annulation
@@ -233,7 +250,7 @@ const CenterPanel = ({
         </button>
 
         {/* Bouton d'annulation */}
-        {isRunning && lapHistory.length > 0 && (
+        {lapHistory.length > 0 && (
           <button
             className="btn-undo"
             onClick={handleUndoLap}
@@ -261,6 +278,6 @@ const CenterPanel = ({
       )}
     </div>
   );
-};
+});
 
 export default CenterPanel;

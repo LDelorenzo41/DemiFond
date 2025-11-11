@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   calculateTargetSpeed,
   calculateLapTime,
@@ -32,6 +32,14 @@ const RightPanel = ({ trackLength, markerDistance, vma, vmaPercent, duration, is
     const maxLaps = Math.max(expectedLaps + 1, 3); // Minimum 3 tours pour avoir quelque chose à afficher
     return generateSimplePaceTable(lapTime, maxLaps);
   }, [lapTime, expectedLaps]);
+
+  // Réinitialiser les inputs de performance quand lapData est vide (nouveau départ ou RAZ)
+  useEffect(() => {
+    if (!lapData || lapData.length === 0) {
+      setActualLaps('');
+      setActualMarkers('');
+    }
+  }, [lapData]);
 
   // Calculer le bilan si on a saisi des données
   const assessment = useMemo(() => {
@@ -78,7 +86,7 @@ const RightPanel = ({ trackLength, markerDistance, vma, vmaPercent, duration, is
       appreciation,
       color
     };
-  }, [actualLaps, actualMarkers, expectedDistance, trackLength, markerDistance]);
+  }, [actualLaps, actualMarkers, expectedDistance, trackLength, markerDistance, duration, targetSpeed]);
 
   // Calculer les statistiques si on a des données
   const stats = useMemo(() => {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import TopBanner from './components/TopBanner';
 import LeftPanel from './components/LeftPanel';
 import CenterPanel from './components/CenterPanel';
@@ -24,8 +24,38 @@ function App() {
   // État pour les données de passage
   const [lapData, setLapData] = useState([]);
 
+  // Ref pour accéder aux fonctions de CenterPanel
+  const centerPanelRef = useRef();
+
   const handleLapData = (data) => {
     setLapData(prev => [...prev, data]);
+  };
+
+  const handleResetLapData = (newData) => {
+    setLapData(newData);
+  };
+
+  // Fonction pour réinitialiser tout (bouton RAZ)
+  const handleResetAll = () => {
+    // Réinitialiser les paramètres du bandeau
+    setTrackLength(200);
+    setVma(12);
+    setMarkerDistance(10);
+
+    // Réinitialiser les paramètres de l'exercice
+    setDuration(3);
+    setVmaPercent(80);
+
+    // Réinitialiser le mode d'observation
+    setIsHalfLap(false);
+
+    // Réinitialiser les données de course
+    setLapData([]);
+
+    // Appeler la fonction de reset du CenterPanel
+    if (centerPanelRef.current && centerPanelRef.current.resetHistory) {
+      centerPanelRef.current.resetHistory();
+    }
   };
 
   return (
@@ -48,9 +78,11 @@ function App() {
           trackLength={trackLength}
           vma={vma}
           markerDistance={markerDistance}
+          onResetAll={handleResetAll}
         />
 
         <CenterPanel
+          ref={centerPanelRef}
           duration={duration}
           vma={vma}
           vmaPercent={vmaPercent}
@@ -58,6 +90,7 @@ function App() {
           isHalfLap={isHalfLap}
           setIsHalfLap={setIsHalfLap}
           onLapData={handleLapData}
+          onResetLapData={handleResetLapData}
         />
 
         <RightPanel

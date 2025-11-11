@@ -16,7 +16,8 @@ const LeftPanel = ({
   setVmaPercent,
   trackLength,
   vma,
-  markerDistance
+  markerDistance,
+  onResetAll
 }) => {
   // Options pour les sélecteurs
   const durationOptions = [0.5, ...Array.from({ length: 29 }, (_, i) => 1 + i * 0.5)]; // 30s à 15 min
@@ -102,6 +103,15 @@ const LeftPanel = ({
             <span>Objectif inadapté</span>
           </div>
         </div>
+
+        {/* Bouton RAZ */}
+        <button
+          className="btn-reset"
+          onClick={onResetAll}
+          title="Réinitialiser tous les paramètres et données"
+        >
+          🔄 RAZ (Remise à zéro)
+        </button>
       </div>
     </div>
   );

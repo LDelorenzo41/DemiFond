@@ -103,6 +103,11 @@ function App() {
           lapData={lapData}
         />
       </div>
+
+      {/* Footer avec copyright */}
+      <footer className="app-footer">
+        <p>© 2025 LD Teach & Tech</p>
+      </footer>
     </div>
   );
 }

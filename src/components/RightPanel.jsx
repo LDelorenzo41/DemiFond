@@ -42,51 +42,57 @@ const RightPanel = ({ trackLength, markerDistance, vma, vmaPercent, duration, is
   }, [lapData]);
 
   // Calculer le bilan si on a saisi des données
-  const assessment = useMemo(() => {
-    const laps = parseInt(actualLaps) || 0;
-    const markers = parseInt(actualMarkers) || 0;
+const assessment = useMemo(() => {
+  const laps = parseInt(actualLaps) || 0;
+  const markers = parseInt(actualMarkers) || 0;
 
-    if (laps === 0 && markers === 0) return null;
+  if (laps === 0 && markers === 0) return null;
 
-    const actualDistance = calculateDistanceFromLaps(laps, markers, trackLength, markerDistance);
-    const distanceDiff = actualDistance - expectedDistance;
-    const percentDiff = (distanceDiff / expectedDistance) * 100;
+  const actualDistance = calculateDistanceFromLaps(laps, markers, trackLength, markerDistance);
+  const distanceDiff = actualDistance - expectedDistance;
+  const percentDiff = (distanceDiff / expectedDistance) * 100;
 
-    // Calculer la vitesse réelle (distance en m, durée en minutes)
-    const actualSpeed = (actualDistance / 1000) / duration * 60; // km/h
-    const speedDiff = actualSpeed - targetSpeed;
+  // Calculer la vitesse réelle (distance en m, durée en minutes)
+  const actualSpeed = (actualDistance / 1000) / duration * 60; // km/h
+  const speedDiff = actualSpeed - targetSpeed;
 
-    // Déterminer l'appréciation
-    let appreciation = '';
-    let color = '';
-    if (percentDiff >= -2 && percentDiff <= 2) {
-      appreciation = 'Excellent ! Objectif parfaitement atteint';
-      color = 'blue';
-    } else if (percentDiff >= -5 && percentDiff <= 5) {
-      appreciation = 'Très bien ! Objectif quasiment atteint';
-      color = 'green';
-    } else if (percentDiff >= -10 && percentDiff <= 10) {
-      appreciation = 'Bien, mais il y a une marge de progression';
-      color = 'yellow';
-    } else {
-      appreciation = distanceDiff > 0
-        ? 'Attention : allure trop élevée pour l\'objectif'
-        : 'Attention : objectif non atteint, allure à revoir';
-      color = 'red';
-    }
+  // Calculer le % de VMA réellement mobilisé
+  const actualVmaPercent = (actualSpeed / vma) * 100;
+  const vmaPercentDiff = actualVmaPercent - vmaPercent;
 
-    return {
-      actualDistance,
-      expectedDistance,
-      distanceDiff,
-      percentDiff,
-      actualSpeed,
-      targetSpeed,
-      speedDiff,
-      appreciation,
-      color
-    };
-  }, [actualLaps, actualMarkers, expectedDistance, trackLength, markerDistance, duration, targetSpeed]);
+  // Déterminer l'appréciation
+  let appreciation = '';
+  let color = '';
+  if (percentDiff >= -2 && percentDiff <= 2) {
+    appreciation = 'Excellent ! Objectif parfaitement atteint';
+    color = 'blue';
+  } else if (percentDiff >= -5 && percentDiff <= 5) {
+    appreciation = 'Très bien ! Objectif quasiment atteint';
+    color = 'green';
+  } else if (percentDiff >= -10 && percentDiff <= 10) {
+    appreciation = 'Bien, mais il y a une marge de progression';
+    color = 'yellow';
+  } else {
+    appreciation = distanceDiff > 0
+      ? 'Attention : allure trop élevée pour l\'objectif'
+      : 'Attention : objectif non atteint, allure à revoir';
+    color = 'red';
+  }
+
+  return {
+    actualDistance,
+    expectedDistance,
+    distanceDiff,
+    percentDiff,
+    actualSpeed,
+    targetSpeed,
+    speedDiff,
+    actualVmaPercent,
+    vmaPercentDiff,
+    appreciation,
+    color
+  };
+}, [actualLaps, actualMarkers, expectedDistance, trackLength, markerDistance, duration, targetSpeed, vma, vmaPercent]);
 
   // Calculer les statistiques si on a des données
   const stats = useMemo(() => {
@@ -219,38 +225,45 @@ const RightPanel = ({ trackLength, markerDistance, vma, vmaPercent, duration, is
       </div>
 
       {/* Bilan comparatif */}
-      {assessment && (
-        <div className={`assessment-box ${assessment.color}`}>
-          <h3>📊 Bilan</h3>
-          <div className="assessment-content">
-            <div className="assessment-row">
-              <span className="label">Distance attendue:</span>
-              <span className="value">{Math.round(assessment.expectedDistance)} m</span>
-            </div>
-            <div className="assessment-row">
-              <span className="label">Distance réalisée:</span>
-              <span className="value">{Math.round(assessment.actualDistance)} m</span>
-            </div>
-            <div className="assessment-row">
-              <span className="label">Écart distance:</span>
-              <span className="value">
-                {assessment.distanceDiff > 0 ? '+' : ''}
-                {Math.round(assessment.distanceDiff)} m ({assessment.percentDiff.toFixed(1)}%)
-              </span>
-            </div>
-            <div className="assessment-row">
-              <span className="label">Vitesse réelle:</span>
-              <span className="value">
-                {assessment.actualSpeed.toFixed(2)} km/h
-                ({assessment.speedDiff > 0 ? '+' : ''}{assessment.speedDiff.toFixed(2)} km/h)
-              </span>
-            </div>
-            <div className="assessment-appreciation">
-              {assessment.appreciation}
-            </div>
-          </div>
-        </div>
-      )}
+{assessment && (
+  <div className={`assessment-box ${assessment.color}`}>
+    <h3>📊 Bilan</h3>
+    <div className="assessment-content">
+      <div className="assessment-row">
+        <span className="label">Distance attendue:</span>
+        <span className="value">{Math.round(assessment.expectedDistance)} m</span>
+      </div>
+      <div className="assessment-row">
+        <span className="label">Distance réalisée:</span>
+        <span className="value">{Math.round(assessment.actualDistance)} m</span>
+      </div>
+      <div className="assessment-row">
+        <span className="label">Écart distance:</span>
+        <span className="value">
+          {assessment.distanceDiff > 0 ? '+' : ''}
+          {Math.round(assessment.distanceDiff)} m ({assessment.percentDiff.toFixed(1)}%)
+        </span>
+      </div>
+      <div className="assessment-row">
+        <span className="label">Vitesse réelle:</span>
+        <span className="value">
+          {assessment.actualSpeed.toFixed(2)} km/h
+          ({assessment.speedDiff > 0 ? '+' : ''}{assessment.speedDiff.toFixed(2)} km/h)
+        </span>
+      </div>
+      <div className="assessment-row">
+        <span className="label">% VMA mobilisé:</span>
+        <span className="value">
+          {assessment.actualVmaPercent.toFixed(1)}%
+          ({assessment.vmaPercentDiff > 0 ? '+' : ''}{assessment.vmaPercentDiff.toFixed(1)}%)
+        </span>
+      </div>
+      <div className="assessment-appreciation">
+        {assessment.appreciation}
+      </div>
+    </div>
+  </div>
+)}
 
       {/* Statistiques en temps réel */}
       {stats && (

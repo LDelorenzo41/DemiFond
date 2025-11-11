@@ -877,10 +877,11 @@
 }
 
 /* ========================================
-   OPTIMISATION POUR IPAD AIR 2 LANDSCAPE
-   9 pouces - 1024px de largeur
+   OPTIMISATION POUR IPAD AIR 2 ET IPAD MINI LANDSCAPE
+   iPad mini paysage : 1024×768 (ou 1133×744)
+   iPad Air paysage : 1180×820
    ======================================== */
-@media (min-width: 1024px) and (max-width: 1280px) and (orientation: landscape) {
+@media (min-width: 900px) and (max-width: 1280px) and (orientation: landscape) {
   /* Bandeau supérieur plus compact */
   .top-banner {
     padding: 10px;
@@ -1200,7 +1201,7 @@
 }
 
 /* Responsive - Tablette portrait */
-@media (max-width: 1024px) {
+@media (max-width: 900px) {
   .main-content {
     grid-template-columns: 1fr;
   }

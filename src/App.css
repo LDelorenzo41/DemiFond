@@ -876,6 +876,329 @@
   color: var(--color-text);
 }
 
+/* ========================================
+   OPTIMISATION POUR IPAD AIR 2 LANDSCAPE
+   9 pouces - 1024px de largeur
+   ======================================== */
+@media (min-width: 1024px) and (max-width: 1280px) and (orientation: landscape) {
+  /* Bandeau supérieur plus compact */
+  .top-banner {
+    padding: 10px;
+  }
+
+  .banner-content {
+    gap: 10px;
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .selector-group label {
+    font-size: 0.8rem;
+  }
+
+  .label-icon {
+    font-size: 1rem;
+  }
+
+  .selector-group select {
+    padding: 8px;
+    font-size: 0.9rem;
+    min-height: 40px;
+  }
+
+  /* Contenu principal - 3 colonnes compactes */
+  .main-content {
+    padding: 12px;
+    gap: 12px;
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  /* Panneaux plus compacts */
+  .panel {
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .panel h2 {
+    font-size: 1.1rem;
+    margin-bottom: 6px;
+    padding-bottom: 6px;
+    border-bottom-width: 2px;
+  }
+
+  .panel h3 {
+    font-size: 0.95rem;
+    margin-bottom: 6px;
+  }
+
+  /* Panneau gauche compact */
+  .param-section {
+    gap: 6px;
+  }
+
+  .param-select {
+    padding: 8px;
+    font-size: 0.9rem;
+    min-height: 40px;
+  }
+
+  .summary-box {
+    padding: 10px;
+  }
+
+  .summary-content p {
+    margin: 6px 0;
+    font-size: 0.95rem;
+  }
+
+  .summary-detail {
+    font-size: 0.85rem !important;
+  }
+
+  .legend-box {
+    padding: 10px;
+  }
+
+  .legend-items {
+    gap: 6px;
+  }
+
+  .legend-item {
+    gap: 8px;
+    font-size: 0.85rem;
+  }
+
+  .legend-color {
+    width: 24px;
+    height: 24px;
+  }
+
+  /* Panneau central compact */
+  .timer-section {
+    padding: 10px;
+  }
+
+  .timer-display {
+    gap: 8px;
+  }
+
+  .timer-box {
+    padding: 10px;
+  }
+
+  .timer-label {
+    font-size: 0.8rem;
+    margin-bottom: 4px;
+  }
+
+  .timer-value {
+    font-size: 1.8rem;
+  }
+
+  .observation-mode {
+    padding: 8px;
+  }
+
+  .checkbox-label {
+    font-size: 0.95rem;
+    gap: 8px;
+  }
+
+  .checkbox-label input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+  }
+
+  .control-buttons {
+    gap: 8px;
+  }
+
+  .btn-control {
+    padding: 10px;
+    font-size: 0.95rem;
+    min-height: 44px;
+  }
+
+  /* Barre de progression compacte */
+  .lap-progress-container {
+    padding: 10px;
+    margin: 12px 0;
+  }
+
+  .lap-progress-header {
+    margin-bottom: 8px;
+  }
+
+  .lap-progress-label {
+    font-size: 0.9rem;
+  }
+
+  .lap-progress-time {
+    font-size: 0.85rem;
+  }
+
+  .lap-progress-bar-wrapper {
+    height: 32px;
+  }
+
+  .lap-progress-status {
+    margin-top: 8px;
+    font-size: 0.95rem;
+    padding: 6px;
+  }
+
+  /* Bouton INFO VITESSE compact */
+  .speed-button-container {
+    margin: 12px 0;
+  }
+
+  .speed-button {
+    min-height: 140px;
+    gap: 8px;
+  }
+
+  .speed-button-text {
+    font-size: 1.2rem;
+  }
+
+  .speed-button-info {
+    font-size: 1rem;
+  }
+
+  .btn-undo {
+    padding: 10px;
+    margin-top: 8px;
+    font-size: 0.9rem;
+    min-height: 40px;
+  }
+
+  /* Historique des passages compact */
+  .lap-history {
+    padding: 10px;
+  }
+
+  .lap-list {
+    gap: 6px;
+  }
+
+  .lap-item {
+    gap: 8px;
+    padding: 8px;
+    font-size: 0.9rem;
+  }
+
+  /* Panneau droit compact */
+  .pace-info {
+    padding: 10px;
+  }
+
+  .pace-info p {
+    margin: 6px 0;
+    font-size: 0.9rem;
+  }
+
+  .pace-table {
+    font-size: 0.85rem;
+  }
+
+  .pace-table th,
+  .pace-table td {
+    padding: 8px;
+  }
+
+  .stats-box {
+    padding: 10px;
+  }
+
+  .stats-content {
+    gap: 8px;
+  }
+
+  .stat-item {
+    padding: 6px 0;
+  }
+
+  .stat-label {
+    font-size: 0.85rem;
+  }
+
+  .stat-value {
+    font-size: 0.95rem;
+  }
+
+  .color-distribution h4 {
+    margin: 6px 0;
+    font-size: 0.9rem;
+  }
+
+  .color-bars {
+    gap: 8px;
+  }
+
+  .color-bar-item {
+    padding: 6px 10px;
+    gap: 6px;
+  }
+
+  .color-dot {
+    width: 14px;
+    height: 14px;
+  }
+
+  .color-count {
+    font-size: 0.9rem;
+  }
+
+  /* Formulaire compact */
+  .performance-form {
+    padding: 10px;
+  }
+
+  .form-grid {
+    gap: 8px;
+  }
+
+  .form-group {
+    gap: 6px;
+  }
+
+  .form-group label {
+    font-size: 0.85rem;
+  }
+
+  .form-input {
+    padding: 8px;
+    font-size: 0.9rem;
+    min-height: 40px;
+  }
+
+  /* Boîte de bilan compacte */
+  .assessment-box {
+    padding: 10px;
+  }
+
+  .assessment-content {
+    gap: 8px;
+  }
+
+  .assessment-row {
+    padding: 6px 0;
+  }
+
+  .assessment-row .label {
+    font-size: 0.85rem;
+  }
+
+  .assessment-row .value {
+    font-size: 0.95rem;
+  }
+
+  .assessment-appreciation {
+    margin-top: 6px;
+    padding: 8px;
+    font-size: 0.9rem;
+  }
+}
+
 /* Responsive - Tablette portrait */
 @media (max-width: 1024px) {
   .main-content {

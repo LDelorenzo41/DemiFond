@@ -17,7 +17,10 @@ const CenterPanel = forwardRef(({
   vmaPercent,
   trackLength,
   onLapData,
-  onResetLapData
+  onResetLapData,
+  seriesConfig,
+  currentSeries,
+  currentRep
 }, ref) => {
   const [isHalfLap, setIsHalfLap] = useState(false);
   const [lapHistory, setLapHistory] = useState([]);
@@ -45,7 +48,7 @@ const CenterPanel = forwardRef(({
 
   const timingStatus = getTimingStatus();
 
-  // Exposer une fonction de reset au parent via ref
+  // Exposer des fonctions au parent via ref
   useImperativeHandle(ref, () => ({
     resetHistory: () => {
       setLapHistory([]);
@@ -55,6 +58,14 @@ const CenterPanel = forwardRef(({
       if (onResetLapData) {
         onResetLapData([]);
       }
+    },
+    resetForNextRun: () => {
+      // Réinitialiser pour la course suivante
+      setLapHistory([]);
+      setLastLapTime(0);
+      setCurrentColor('gray');
+      reset();
+      // NE PAS réinitialiser les données du parent (on garde les stats cumulatives)
     }
   }));
 
@@ -65,12 +76,12 @@ const CenterPanel = forwardRef(({
       setLapHistory([]);
       setLastLapTime(0);
       setCurrentColor('gray');
-      // Réinitialiser les données dans le parent
-      if (onResetLapData) {
+      // Réinitialiser les données dans le parent SEULEMENT si pas en mode série
+      if (onResetLapData && !seriesConfig) {
         onResetLapData([]);
       }
     } else {
-      // Arrêter la course (mais garder l'historique)
+      // Arrêter la course
       reset();
     }
   };
@@ -155,6 +166,16 @@ const CenterPanel = forwardRef(({
   return (
     <div className="center-panel panel">
       <h2>🏁 Course en direct</h2>
+
+      {/* Affichage de la progression des séries */}
+      {seriesConfig && (
+        <div className="series-progress">
+          <p className="series-progress-text">
+            <strong>Série {currentSeries}/{seriesConfig.totalSeries}</strong> - 
+            Répétition <strong>{currentRep}/{seriesConfig.repsPerSeries}</strong>
+          </p>
+        </div>
+      )}
 
       {/* Chronomètres */}
       <div className="timer-section">

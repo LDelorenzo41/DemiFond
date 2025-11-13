@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   calculateTargetSpeed,
   calculateTotalDistance,
@@ -17,10 +17,18 @@ const LeftPanel = ({
   trackLength,
   vma,
   markerDistance,
-  onResetAll
+  onResetAll,
+  onCreateSeries,
+  seriesConfig,
+  onCancelSeries
 }) => {
+  // État pour la modale de création de séries
+  const [showSeriesModal, setShowSeriesModal] = useState(false);
+  const [totalSeries, setTotalSeries] = useState(3);
+  const [repsPerSeries, setRepsPerSeries] = useState(5);
+
   // Options pour les sélecteurs
-  const durationOptions = [0.5, ...Array.from({ length: 29 }, (_, i) => 1 + i * 0.5)]; // 30s à 15 min
+  const durationOptions = [0.5, ...Array.from({ length: 60 }, (_, i) => 1 + i * 0.5)]; // 30s à 30 min
   const vmaPercentOptions = Array.from({ length: 61 }, (_, i) => 60 + i); // 60% à 120%
 
   // Calculs pour le résumé
@@ -28,6 +36,29 @@ const LeftPanel = ({
   const totalDistance = calculateTotalDistance(targetSpeed, duration);
   const { fullLaps, remainingMeters } = calculateLaps(totalDistance, trackLength);
   const markers = calculateMarkers(remainingMeters, markerDistance);
+
+  const handleOpenSeriesModal = () => {
+    setShowSeriesModal(true);
+  };
+
+  const handleCloseSeriesModal = () => {
+    setShowSeriesModal(false);
+  };
+
+  const handleValidateSeries = () => {
+    if (totalSeries > 0 && repsPerSeries > 0) {
+      onCreateSeries(totalSeries, repsPerSeries);
+      setShowSeriesModal(false);
+    } else {
+      alert('Veuillez entrer des valeurs valides (minimum 1)');
+    }
+  };
+
+  const handleCancelSeriesConfig = () => {
+    if (window.confirm('Voulez-vous annuler la configuration des séries ?')) {
+      onCancelSeries();
+    }
+  };
 
   return (
     <div className="left-panel panel">
@@ -112,7 +143,75 @@ const LeftPanel = ({
         >
           🔄 RAZ (Remise à zéro)
         </button>
+
+        {/* Bouton Créer des séries */}
+        {!seriesConfig ? (
+          <button
+            className="btn-series"
+            onClick={handleOpenSeriesModal}
+            title="Configurer des séries de courses"
+          >
+            📋 Créer des séries
+          </button>
+        ) : (
+          <div className="series-info">
+            <p className="series-config">
+              <strong>Séries configurées :</strong><br />
+              {seriesConfig.totalSeries} série{seriesConfig.totalSeries > 1 ? 's' : ''} × {seriesConfig.repsPerSeries} répétition{seriesConfig.repsPerSeries > 1 ? 's' : ''}
+            </p>
+            <button
+              className="btn-cancel-series"
+              onClick={handleCancelSeriesConfig}
+              title="Annuler la configuration des séries"
+            >
+              ❌ Annuler les séries
+            </button>
+          </div>
+        )}
       </div>
+
+      {/* Modale de création de séries */}
+      {showSeriesModal && (
+        <div className="modal-overlay" onClick={handleCloseSeriesModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3>📋 Créer des séries</h3>
+            <div className="modal-body">
+              <div className="form-group">
+                <label htmlFor="total-series">Nombre de séries :</label>
+                <input
+                  type="number"
+                  id="total-series"
+                  value={totalSeries}
+                  onChange={(e) => setTotalSeries(parseInt(e.target.value) || 1)}
+                  min="1"
+                  max="10"
+                  className="form-input"
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="reps-per-series">Répétitions par série :</label>
+                <input
+                  type="number"
+                  id="reps-per-series"
+                  value={repsPerSeries}
+                  onChange={(e) => setRepsPerSeries(parseInt(e.target.value) || 1)}
+                  min="1"
+                  max="20"
+                  className="form-input"
+                />
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-modal-cancel" onClick={handleCloseSeriesModal}>
+                Annuler
+              </button>
+              <button className="btn-modal-validate" onClick={handleValidateSeries}>
+                Valider
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

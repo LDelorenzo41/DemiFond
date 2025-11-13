@@ -221,6 +221,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--spacing-md);
+  width: 100%;
 }
 
 .timer-box {
@@ -229,6 +230,11 @@
   border-radius: var(--radius-md);
   text-align: center;
   box-shadow: var(--shadow-sm);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .timer-label {
@@ -236,14 +242,17 @@
   font-size: 0.9rem;
   color: var(--color-text-light);
   margin-bottom: var(--spacing-sm);
+  white-space: nowrap;
 }
 
 .timer-value {
   display: block;
-  font-size: 2.5rem;
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
   font-weight: 700;
   color: var(--color-primary);
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  line-height: 1.2;
 }
 
 .timer-value.countdown {
@@ -912,11 +921,10 @@
 }
 
 /* ========================================
-   OPTIMISATION POUR IPAD AIR 2 ET IPAD MINI LANDSCAPE
-   iPad mini paysage : 1024×768 (ou 1133×744)
-   iPad Air paysage : 1180×820
+   OPTIMISATION POUR IPAD AIR 2 LANDSCAPE
+   9 pouces - 1024px de largeur
    ======================================== */
-@media (min-width: 900px) and (max-width: 1280px) and (orientation: landscape) {
+@media (min-width: 1024px) and (max-width: 1280px) and (orientation: landscape) {
   /* Bandeau supérieur plus compact */
   .top-banner {
     padding: 10px;
@@ -1018,16 +1026,16 @@
   }
 
   .timer-box {
-    padding: 10px;
+    padding: 8px;
   }
 
   .timer-label {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     margin-bottom: 4px;
   }
 
   .timer-value {
-    font-size: 1.8rem;
+    font-size: 1.5rem;
   }
 
   .observation-mode {
@@ -1106,16 +1114,6 @@
     font-size: 0.9rem;
     min-height: 40px;
   }
-
-  /* Bouton RAZ compact */
-  .btn-reset {
-    padding: 10px;
-    font-size: 0.9rem;
-    min-height: 40px;
-    margin-top: 8px;
-  }
-
-  /* Historique des passages compact */
 
   /* Historique des passages compact */
   .lap-history {
@@ -1243,6 +1241,110 @@
     padding: 8px;
     font-size: 0.9rem;
   }
+
+  /* Bouton RAZ */
+  .btn-reset {
+    padding: 10px;
+    font-size: 0.9rem;
+    min-height: 40px;
+    margin-top: 8px;
+  }
+
+  /* Boutons séries */
+  .btn-series {
+    padding: 10px;
+    font-size: 0.9rem;
+    min-height: 40px;
+    margin-top: 8px;
+  }
+
+  .series-info {
+    padding: 10px;
+  }
+
+  .series-config {
+    font-size: 0.85rem;
+  }
+
+  .btn-cancel-series {
+    padding: 8px;
+    font-size: 0.85rem;
+  }
+
+  .series-progress {
+    padding: 10px;
+  }
+
+  .series-progress-text {
+    font-size: 0.95rem;
+  }
+
+  .modal-content {
+    padding: 12px;
+  }
+
+  .modal-content h3 {
+    font-size: 1.2rem;
+  }
+
+  .modal-body p {
+    font-size: 0.95rem;
+  }
+
+  .btn-modal-cancel,
+  .btn-modal-validate {
+    padding: 10px 16px;
+    font-size: 0.9rem;
+    min-height: 40px;
+  }
+
+  .cumulative-performance-box {
+    padding: 10px;
+  }
+
+  .cumulative-performance-box h3 {
+    font-size: 0.95rem;
+  }
+
+  .cumulative-performance-box h4 {
+    font-size: 0.9rem;
+  }
+
+  .current-run-info {
+    padding: 6px;
+    font-size: 0.85rem;
+  }
+
+  .performance-history-list {
+    max-height: 200px;
+  }
+
+  .performance-history-item {
+    padding: 6px;
+  }
+
+  .performance-history-header {
+    font-size: 0.8rem;
+  }
+
+  .performance-history-body {
+    font-size: 0.75rem;
+  }
+
+  .btn-validate-next,
+  .btn-validate-final {
+    padding: 12px;
+    font-size: 0.95rem;
+    min-height: 48px;
+  }
+
+  .app-footer {
+    padding: 8px;
+  }
+  
+  .app-footer p {
+    font-size: 0.75rem;
+  }
 }
 
 /* Responsive - Tablette portrait */
@@ -1275,8 +1377,25 @@
     font-size: 1.3rem;
   }
 
+  /* Timer responsive mobile */
+  .timer-section {
+    padding: var(--spacing-md);
+  }
+
+  .timer-display {
+    gap: var(--spacing-sm);
+  }
+
+  .timer-box {
+    padding: var(--spacing-sm);
+  }
+
+  .timer-label {
+    font-size: 0.8rem;
+  }
+
   .timer-value {
-    font-size: 2rem;
+    font-size: 1.8rem;
   }
 
   .speed-button {
@@ -1365,20 +1484,354 @@
   flex: 1;
 }
 
-/* Style pour iPad landscape */
-@media (min-width: 1024px) and (max-width: 1280px) and (orientation: landscape) {
-  .app-footer {
-    padding: 8px;
-  }
-  
-  .app-footer p {
-    font-size: 0.75rem;
-  }
-}
-
 /* Mobile */
 @media (max-width: 768px) {
   .app-footer p {
     font-size: 0.8rem;
+  }
+}
+/* Boutons séries */
+.btn-series {
+  width: 100%;
+  margin-top: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 48px;
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-series:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn-series:active {
+  transform: scale(0.98);
+}
+
+.series-info {
+  margin-top: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border-radius: var(--radius-md);
+  border-left: 4px solid var(--color-primary);
+}
+
+.series-config {
+  margin: 0 0 var(--spacing-sm) 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.btn-cancel-series {
+  width: 100%;
+  padding: var(--spacing-sm);
+  background: var(--color-red);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-cancel-series:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Progression des séries */
+.series-progress {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  text-align: center;
+  margin-bottom: var(--spacing-md);
+  border: 2px solid var(--color-primary);
+}
+
+.series-progress-text {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--color-primary);
+}
+
+/* Modales */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-lg);
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-content h3 {
+  margin: 0 0 var(--spacing-lg) 0;
+  color: var(--color-primary);
+  font-size: 1.5rem;
+  border-bottom: 2px solid var(--color-primary);
+  padding-bottom: var(--spacing-sm);
+}
+
+.modal-body {
+  margin-bottom: var(--spacing-lg);
+}
+
+.modal-body p {
+  margin: var(--spacing-sm) 0;
+  font-size: 1.1rem;
+}
+
+.series-info-modal {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  margin-top: var(--spacing-md);
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.modal-footer {
+  display: flex;
+  gap: var(--spacing-md);
+  justify-content: flex-end;
+}
+
+.btn-modal-cancel {
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--color-gray);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 48px;
+}
+
+.btn-modal-cancel:hover {
+  background: #4b5563;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-modal-validate {
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 48px;
+}
+
+.btn-modal-validate:hover {
+  background: #1e40af;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .modal-content {
+    width: 95%;
+    padding: var(--spacing-md);
+  }
+
+  .modal-footer {
+    flex-direction: column;
+  }
+
+  .btn-modal-cancel,
+  .btn-modal-validate {
+    width: 100%;
+  }
+
+  .series-progress-text {
+    font-size: 1rem;
+  }
+}
+/* Bilan cumulatif des performances */
+.cumulative-performance-box {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  padding: var(--spacing-lg);
+  border-radius: var(--radius-md);
+  margin-top: var(--spacing-md);
+  border-left: 4px solid #f59e0b;
+}
+
+.cumulative-performance-box h3 {
+  font-size: 1.1rem;
+  color: var(--color-text);
+  margin-bottom: var(--spacing-md);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+  padding-bottom: var(--spacing-sm);
+}
+
+.cumulative-performance-box h4 {
+  font-size: 1rem;
+  color: var(--color-text);
+  margin: var(--spacing-md) 0 var(--spacing-sm) 0;
+}
+
+.cumulative-performance-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.current-run-info {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  text-align: center;
+  font-weight: 600;
+  color: var(--color-primary);
+  margin-bottom: var(--spacing-md);
+}
+
+/* Détail des performances */
+.performance-history-details {
+  margin-top: var(--spacing-lg);
+  padding-top: var(--spacing-lg);
+  border-top: 2px solid rgba(0, 0, 0, 0.1);
+}
+
+.performance-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.performance-history-item {
+  background: var(--color-surface);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-sm);
+  border-left: 4px solid;
+}
+
+.performance-history-item.blue { border-left-color: var(--color-blue); }
+.performance-history-item.green { border-left-color: var(--color-green); }
+.performance-history-item.yellow { border-left-color: var(--color-yellow); }
+.performance-history-item.red { border-left-color: var(--color-red); }
+
+.performance-history-header {
+  font-size: 0.9rem;
+  margin-bottom: var(--spacing-xs);
+  color: var(--color-text-light);
+}
+
+.performance-history-body {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .performance-history-body {
+    flex-direction: column;
+    gap: var(--spacing-xs);
+  }
+}
+/* Bouton valider et passer à la suivante */
+.btn-validate-next {
+  width: 100%;
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-lg);
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 56px;
+  box-shadow: var(--shadow-md);
+}
+
+.btn-validate-next:hover:not(:disabled) {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn-validate-next:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.btn-validate-next:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: var(--color-gray);
+}
+
+.btn-validate-final {
+  width: 100%;
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-lg);
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 56px;
+  box-shadow: var(--shadow-md);
+}
+
+.btn-validate-final:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn-validate-final:active {
+  transform: scale(0.98);
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .btn-validate-next,
+  .btn-validate-final {
+    font-size: 1rem;
   }
 }

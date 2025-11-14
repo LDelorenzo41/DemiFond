@@ -26,7 +26,8 @@ const RightPanel = ({
   currentRep,
   performanceHistory,
   onValidatePerformance,
-  isSeriesComplete
+  isSeriesComplete,
+  isRunning
 }) => {
   const [notes, setNotes] = useState('');
   const [actualLaps, setActualLaps] = useState('');
@@ -210,7 +211,7 @@ const RightPanel = ({
   };
 
   return (
-    <div className="right-panel panel">
+    <div className={`right-panel panel ${isRunning ? 'panel-dimmed' : ''}`}>
       <h2>📋 Tableau d'allure</h2>
 
       <div className="pace-info">

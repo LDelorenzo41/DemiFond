@@ -1,4 +1,4 @@
-import React, { useState, useImperativeHandle, forwardRef } from 'react';
+import React, { useState, useImperativeHandle, forwardRef, useEffect } from 'react';
 import { useTimer } from '../hooks/useTimer';
 import {
   formatTime,
@@ -20,7 +20,8 @@ const CenterPanel = forwardRef(({
   onResetLapData,
   seriesConfig,
   currentSeries,
-  currentRep
+  currentRep,
+  onRunningChange
 }, ref) => {
   const [isHalfLap, setIsHalfLap] = useState(false);
   const [lapHistory, setLapHistory] = useState([]);
@@ -37,6 +38,13 @@ const CenterPanel = forwardRef(({
   // Calcul de la progression du tour actuel
   const currentLapTime = elapsedTime - lastLapTime;
   const progressPercent = (currentLapTime / targetLapTime) * 100;
+
+  // Informer le parent de l'état de la course
+  useEffect(() => {
+    if (onRunningChange) {
+      onRunningChange(isRunning && !isPaused);
+    }
+  }, [isRunning, isPaused, onRunningChange]);
 
   // Déterminer le statut de l'allure
   const getTimingStatus = () => {

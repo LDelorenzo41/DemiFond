@@ -20,7 +20,8 @@ const LeftPanel = ({
   onResetAll,
   onCreateSeries,
   seriesConfig,
-  onCancelSeries
+  onCancelSeries,
+  isRunning
 }) => {
   // État pour la modale de création de séries
   const [showSeriesModal, setShowSeriesModal] = useState(false);
@@ -61,7 +62,7 @@ const LeftPanel = ({
   };
 
   return (
-    <div className="left-panel panel">
+    <div className={`left-panel panel ${isRunning ? 'panel-dimmed' : ''}`}>
       <h2>⚙️ Paramètres de l'exercice</h2>
 
       <div className="param-section">
@@ -73,6 +74,7 @@ const LeftPanel = ({
           value={duration}
           onChange={(e) => setDuration(Number(e.target.value))}
           className="param-select"
+          disabled={isRunning}
         >
           {durationOptions.map(time => (
             <option key={time} value={time}>
@@ -91,6 +93,7 @@ const LeftPanel = ({
           value={vmaPercent}
           onChange={(e) => setVmaPercent(Number(e.target.value))}
           className="param-select"
+          disabled={isRunning}
         >
           {vmaPercentOptions.map(percent => (
             <option key={percent} value={percent}>{percent}%</option>
@@ -140,6 +143,7 @@ const LeftPanel = ({
           className="btn-reset"
           onClick={onResetAll}
           title="Réinitialiser tous les paramètres et données"
+          disabled={isRunning}
         >
           🔄 RAZ (Remise à zéro)
         </button>
@@ -150,6 +154,7 @@ const LeftPanel = ({
             className="btn-series"
             onClick={handleOpenSeriesModal}
             title="Configurer des séries de courses"
+            disabled={isRunning}
           >
             📋 Créer des séries
           </button>
@@ -163,6 +168,7 @@ const LeftPanel = ({
               className="btn-cancel-series"
               onClick={handleCancelSeriesConfig}
               title="Annuler la configuration des séries"
+              disabled={isRunning}
             >
               ❌ Annuler les séries
             </button>

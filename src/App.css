@@ -1835,3 +1835,25 @@
     font-size: 1rem;
   }
 }
+/* Effet de focus sur la colonne centrale pendant la course */
+.panel-dimmed {
+  opacity: 0.4;
+  filter: grayscale(30%);
+  transition: all 0.3s ease;
+  pointer-events: auto;
+}
+
+.panel-dimmed:hover {
+  opacity: 0.7;
+  filter: grayscale(10%);
+}
+
+.center-panel {
+  transition: all 0.3s ease;
+}
+
+/* Légère mise en avant de la colonne centrale quand course active */
+.main-content:has(.center-panel) .center-panel {
+  position: relative;
+  z-index: 1;
+}

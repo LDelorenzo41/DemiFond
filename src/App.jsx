@@ -32,6 +32,9 @@ function App() {
   // État pour les bilans de performance cumulatifs (en mode série)
   const [performanceHistory, setPerformanceHistory] = useState([]);
 
+  // État pour savoir si une course est en cours
+  const [isRunning, setIsRunning] = useState(false);
+
   // Ref pour accéder aux fonctions de CenterPanel
   const centerPanelRef = useRef();
 
@@ -159,6 +162,7 @@ function App() {
           onCreateSeries={handleCreateSeries}
           seriesConfig={seriesConfig}
           onCancelSeries={handleCancelSeries}
+          isRunning={isRunning}
         />
 
         <CenterPanel
@@ -174,6 +178,7 @@ function App() {
           seriesConfig={seriesConfig}
           currentSeries={currentSeries}
           currentRep={currentRep}
+          onRunningChange={setIsRunning}
         />
 
         <RightPanel
@@ -190,6 +195,7 @@ function App() {
           performanceHistory={performanceHistory}
           onValidatePerformance={handleValidatePerformance}
           isSeriesComplete={isSeriesComplete()}
+          isRunning={isRunning}
         />
       </div>
 

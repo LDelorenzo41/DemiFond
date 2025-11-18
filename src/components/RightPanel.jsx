@@ -36,6 +36,205 @@ const calculateRPE = (vmaPercent) => {
 };
 
 /**
+ * Composant : Graphique d'évolution de la vitesse
+ * Utilise des courbes de Bézier pour un rendu lisse et professionnel
+ */
+const SpeedChart = ({ lapData, targetSpeed }) => {
+  const chartWidth = 100; // Pourcentages
+  const chartHeight = 100;
+  const padding = { top: 10, right: 10, bottom: 15, left: 15 };
+
+  if (!lapData || lapData.length === 0) return null;
+
+  const speeds = lapData.map(lap => lap.speed);
+  const maxSpeed = Math.max(...speeds, targetSpeed + 0.5);
+  const minSpeed = Math.min(...speeds, targetSpeed - 0.5);
+  const speedRange = maxSpeed - minSpeed || 1;
+
+  // Calculer les points du graphique
+  const points = lapData.map((lap, index) => {
+    const x = padding.left + ((chartWidth - padding.left - padding.right) * index) / (lapData.length - 1 || 1);
+    const y = chartHeight - padding.bottom - ((lap.speed - minSpeed) / speedRange) * (chartHeight - padding.top - padding.bottom);
+    return { x, y, lap };
+  });
+
+  // Créer une courbe de Bézier lisse (catmull-rom to bezier)
+  const createSmoothPath = (points) => {
+    if (points.length < 2) return '';
+
+    let path = `M ${points[0].x} ${points[0].y}`;
+
+    for (let i = 0; i < points.length - 1; i++) {
+      const current = points[i];
+      const next = points[i + 1];
+
+      if (points.length === 2) {
+        // Si seulement 2 points, ligne droite
+        path += ` L ${next.x} ${next.y}`;
+      } else {
+        // Courbe de Bézier cubique pour un rendu lisse
+        const prev = points[i - 1] || current;
+        const afterNext = points[i + 2] || next;
+
+        // Points de contrôle pour une courbe lisse
+        const cp1x = current.x + (next.x - prev.x) / 6;
+        const cp1y = current.y + (next.y - prev.y) / 6;
+        const cp2x = next.x - (afterNext.x - current.x) / 6;
+        const cp2y = next.y - (afterNext.y - current.y) / 6;
+
+        path += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${next.x} ${next.y}`;
+      }
+    }
+
+    return path;
+  };
+
+  // Ligne de la vitesse cible
+  const targetY = chartHeight - padding.bottom - ((targetSpeed - minSpeed) / speedRange) * (chartHeight - padding.top - padding.bottom);
+
+  // Grille horizontale (3 lignes)
+  const gridLines = [0, 0.5, 1].map(ratio => {
+    const y = chartHeight - padding.bottom - ratio * (chartHeight - padding.top - padding.bottom);
+    const speed = minSpeed + ratio * speedRange;
+    return { y, speed };
+  });
+
+  return (
+    <svg className="speed-chart" viewBox={`0 0 ${chartWidth} ${chartHeight}`} preserveAspectRatio="none">
+      <defs>
+        {/* Gradient pour la zone sous la courbe */}
+        <linearGradient id="speedGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="var(--color-primary)" stopOpacity="0.3" />
+          <stop offset="100%" stopColor="var(--color-primary)" stopOpacity="0.05" />
+        </linearGradient>
+
+        {/* Ombre portée pour la courbe */}
+        <filter id="shadow">
+          <feDropShadow dx="0" dy="1" stdDeviation="1" floodOpacity="0.2"/>
+        </filter>
+      </defs>
+
+      {/* Grille horizontale */}
+      {gridLines.map((line, i) => (
+        <g key={i}>
+          <line
+            x1={padding.left}
+            y1={line.y}
+            x2={chartWidth - padding.right}
+            y2={line.y}
+            className="chart-grid-line"
+          />
+          <text
+            x={padding.left - 2}
+            y={line.y}
+            className="chart-label"
+            textAnchor="end"
+            dominantBaseline="middle"
+          >
+            {line.speed.toFixed(1)}
+          </text>
+        </g>
+      ))}
+
+      {/* Ligne de vitesse cible */}
+      <line
+        x1={padding.left}
+        y1={targetY}
+        x2={chartWidth - padding.right}
+        y2={targetY}
+        className="chart-target-line"
+      />
+      <text
+        x={chartWidth - padding.right + 1}
+        y={targetY}
+        className="chart-target-label"
+        dominantBaseline="middle"
+      >
+        Cible
+      </text>
+
+      {/* Zone sous la courbe */}
+      {points.length > 1 && (
+        <path
+          d={`${createSmoothPath(points)} L ${points[points.length - 1].x} ${chartHeight - padding.bottom} L ${points[0].x} ${chartHeight - padding.bottom} Z`}
+          fill="url(#speedGradient)"
+          className="chart-area"
+        />
+      )}
+
+      {/* Courbe principale */}
+      <path
+        d={createSmoothPath(points)}
+        fill="none"
+        className="chart-line"
+        filter="url(#shadow)"
+      />
+
+      {/* Points de données */}
+      {points.map((point, index) => (
+        <g key={index} className="chart-point-group">
+          {/* Cercle de fond blanc pour contraste */}
+          <circle
+            cx={point.x}
+            cy={point.y}
+            r="1.5"
+            fill="white"
+            className="chart-point-bg"
+          />
+          {/* Point coloré selon la performance */}
+          <circle
+            cx={point.x}
+            cy={point.y}
+            r="1.2"
+            className={`chart-point chart-point-${point.lap.color}`}
+          >
+            <title>Tour {point.lap.lapNumber}: {point.lap.speed.toFixed(2)} km/h</title>
+          </circle>
+        </g>
+      ))}
+
+      {/* Labels de l'axe X (numéros de tours) */}
+      {points.map((point, index) => {
+        // Afficher tous les tours si moins de 10, sinon tous les 2
+        const showLabel = lapData.length <= 10 || index % 2 === 0 || index === lapData.length - 1;
+        if (!showLabel) return null;
+
+        return (
+          <text
+            key={index}
+            x={point.x}
+            y={chartHeight - 2}
+            className="chart-x-label"
+            textAnchor="middle"
+          >
+            {point.lap.lapNumber}
+          </text>
+        );
+      })}
+
+      {/* Label de l'axe Y */}
+      <text
+        x={1}
+        y={5}
+        className="chart-axis-label"
+      >
+        km/h
+      </text>
+
+      {/* Label de l'axe X */}
+      <text
+        x={chartWidth - 2}
+        y={chartHeight - 2}
+        className="chart-axis-label"
+        textAnchor="end"
+      >
+        Tours
+      </text>
+    </svg>
+  );
+};
+
+/**
  * Composant : Panneau droit - Tableau d'allure et bilan
  */
 const RightPanel = ({ 
@@ -414,6 +613,14 @@ const RightPanel = ({
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Graphique d'évolution de la vitesse */}
+      {lapData && lapData.length > 0 && (
+        <div className="speed-chart-container">
+          <h3>📈 Évolution de la vitesse</h3>
+          <SpeedChart lapData={lapData} targetSpeed={targetSpeed} />
         </div>
       )}
 

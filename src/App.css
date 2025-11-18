@@ -113,9 +113,12 @@
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: var(--spacing-lg);
   flex: 1;
+  align-items: start; /* Important pour le scroll indépendant */
 }
 
+
 /* Panneaux */
+/* Panneaux avec scroll indépendant */
 .panel {
   background: var(--color-surface);
   border-radius: var(--radius-lg);
@@ -124,6 +127,28 @@
   display: flex;
   flex-direction: column;
   gap: var(--spacing-lg);
+  max-height: calc(100vh - 180px); /* Hauteur max = hauteur écran - bandeau - padding */
+  overflow-y: auto; /* Scroll vertical indépendant */
+  position: relative;
+}
+
+/* Scrollbar personnalisée pour un meilleur look */
+.panel::-webkit-scrollbar {
+  width: 8px;
+}
+
+.panel::-webkit-scrollbar-track {
+  background: var(--color-background);
+  border-radius: var(--radius-md);
+}
+
+.panel::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  border-radius: var(--radius-md);
+}
+
+.panel::-webkit-scrollbar-thumb:hover {
+  background: var(--color-secondary);
 }
 
 .panel h2 {
@@ -617,6 +642,35 @@
   background: var(--color-background);
   padding: var(--spacing-md);
   border-radius: var(--radius-md);
+}
+
+.lap-history h3 {
+  margin: 0 0 var(--spacing-md) 0;
+}
+
+.lap-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+/* Scrollbar pour la liste des tours */
+.lap-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.lap-list::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: var(--radius-sm);
+}
+
+.lap-list::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  border-radius: var(--radius-sm);
+}
+
+.lap-list::-webkit-scrollbar-thumb:hover {
+  background: var(--color-secondary);
 }
 
 .lap-list {
@@ -1826,6 +1880,59 @@
 
 .btn-validate-final:active {
   transform: scale(0.98);
+}
+/* Input personnalisé pour longueur de piste */
+.custom-input-group {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+}
+
+.custom-input {
+  flex: 1;
+  padding: var(--spacing-md);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--color-text);
+  font-size: 1rem;
+  font-weight: 600;
+  transition: all 0.2s;
+  min-height: 48px;
+}
+
+.custom-input:focus {
+  outline: none;
+  border-color: white;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+}
+
+.btn-back-to-select {
+  padding: var(--spacing-md);
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: var(--radius-md);
+  font-size: 1.2rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 48px;
+  min-height: 48px;
+}
+
+.btn-back-to-select:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: white;
+}
+/* Style pour l'info RPE */
+.rpe-info {
+  background: linear-gradient(135deg, #60a5fa 0%, #c084fc 100%);
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  margin: var(--spacing-sm) 0 !important;
+  font-weight: 600;
+  border-left: 4px solid #60a5fa;
 }
 
 /* Mobile */

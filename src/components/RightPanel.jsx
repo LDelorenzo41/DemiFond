@@ -11,6 +11,31 @@ import {
 } from '../utils/calculations';
 
 /**
+ * Calcule le RPE (Rating of Perceived Exertion) en fonction du % de VMA
+ * @param {number} vmaPercent - Pourcentage de VMA
+ * @returns {object} { rpe, description }
+ */
+const calculateRPE = (vmaPercent) => {
+  if (vmaPercent < 50) {
+    return { rpe: '1-2', description: 'Récupération active' };
+  } else if (vmaPercent >= 50 && vmaPercent < 60) {
+    return { rpe: '2-3', description: 'Très facile' };
+  } else if (vmaPercent >= 60 && vmaPercent < 70) {
+    return { rpe: '3-4', description: 'Endurance tranquille' };
+  } else if (vmaPercent >= 70 && vmaPercent < 80) {
+    return { rpe: '5-6', description: 'Allure active' };
+  } else if (vmaPercent >= 80 && vmaPercent < 88) {
+    return { rpe: '6-7', description: 'Seuil, soutenu' };
+  } else if (vmaPercent >= 88 && vmaPercent < 100) {
+    return { rpe: '8-9', description: 'Très dur, effort intense' };
+  } else if (vmaPercent >= 100 && vmaPercent <= 110) {
+    return { rpe: '10', description: 'Maximal / Sprint' };
+  } else {
+    return { rpe: '10+', description: 'Au-delà du maximum' };
+  }
+};
+
+/**
  * Composant : Panneau droit - Tableau d'allure et bilan
  */
 const RightPanel = ({ 
@@ -41,6 +66,9 @@ const RightPanel = ({
   const { fullLaps: expectedLaps, remainingMeters } = calculateLaps(expectedDistance, trackLength);
   const expectedMarkers = calculateMarkers(remainingMeters, markerDistance);
 
+  // Calculer le RPE
+  const rpeInfo = calculateRPE(vmaPercent);
+
   // Générer le tableau d'allures simplifié (temps par tour)
   // Limité à objectif + 1 tour
   const paceTable = useMemo(() => {
@@ -70,25 +98,27 @@ const RightPanel = ({
     // Calculer la vitesse réelle (distance en m, durée en minutes)
     const actualSpeed = (actualDistance / 1000) / duration * 60; // km/h
     const speedDiff = actualSpeed - targetSpeed;
+    const speedDiffAbs = Math.abs(speedDiff);
 
     // Calculer le % de VMA réellement mobilisé
     const actualVmaPercent = (actualSpeed / vma) * 100;
     const vmaPercentDiff = actualVmaPercent - vmaPercent;
 
-    // Déterminer l'appréciation
+    // Déterminer l'appréciation basée sur l'écart de vitesse
     let appreciation = '';
     let color = '';
-    if (percentDiff >= -2 && percentDiff <= 2) {
+    
+    if (speedDiffAbs <= 0.2) {
       appreciation = 'Excellent ! Objectif parfaitement atteint';
       color = 'blue';
-    } else if (percentDiff >= -5 && percentDiff <= 5) {
+    } else if (speedDiffAbs <= 0.5) {
       appreciation = 'Très bien ! Objectif quasiment atteint';
       color = 'green';
-    } else if (percentDiff >= -10 && percentDiff <= 10) {
+    } else if (speedDiffAbs <= 1.5) {
       appreciation = 'Bien, mais il y a une marge de progression';
       color = 'yellow';
     } else {
-      appreciation = distanceDiff > 0
+      appreciation = speedDiff > 0
         ? 'Attention : allure trop élevée pour l\'objectif'
         : 'Attention : objectif non atteint, allure à revoir';
       color = 'red';
@@ -220,6 +250,9 @@ const RightPanel = ({
         </p>
         <p>
           <strong>Vitesse cible:</strong> {targetSpeed.toFixed(1)} km/h
+        </p>
+        <p className="rpe-info">
+          <strong>% de VMA: {vmaPercent}%</strong> - RPE {rpeInfo.rpe}: {rpeInfo.description}
         </p>
         <p>
           <strong>Objectif:</strong> {expectedLaps} tours + {expectedMarkers} repères

@@ -25,7 +25,7 @@ function App() {
   const [lapData, setLapData] = useState([]);
 
   // États pour les séries
-  const [seriesConfig, setSeriesConfig] = useState(null); // { totalSeries: 3, repsPerSeries: 5 }
+  const [seriesConfig, setSeriesConfig] = useState(null); // { totalSeries: 3, repsPerSeries: 5, recoveryBetweenReps: 60, recoveryBetweenSeries: 180 }
   const [currentSeries, setCurrentSeries] = useState(1);
   const [currentRep, setCurrentRep] = useState(1);
 
@@ -34,6 +34,12 @@ function App() {
 
   // État pour savoir si une course est en cours
   const [isRunning, setIsRunning] = useState(false);
+
+  // État pour le chronomètre de récupération
+  const [isRecoveryActive, setIsRecoveryActive] = useState(false);
+  const [recoveryType, setRecoveryType] = useState(''); // 'rep' ou 'series'
+  const [nextSeries, setNextSeries] = useState(1);
+  const [nextRep, setNextRep] = useState(1);
 
   // Ref pour accéder aux fonctions de CenterPanel
   const centerPanelRef = useRef();
@@ -47,8 +53,13 @@ function App() {
   };
 
   // Créer des séries
-  const handleCreateSeries = (totalSeries, repsPerSeries) => {
-    setSeriesConfig({ totalSeries, repsPerSeries });
+  const handleCreateSeries = (totalSeries, repsPerSeries, recoveryBetweenReps, recoveryBetweenSeries) => {
+    setSeriesConfig({ 
+      totalSeries, 
+      repsPerSeries, 
+      recoveryBetweenReps, 
+      recoveryBetweenSeries 
+    });
     setCurrentSeries(1);
     setCurrentRep(1);
     setPerformanceHistory([]);
@@ -60,6 +71,7 @@ function App() {
     setCurrentSeries(1);
     setCurrentRep(1);
     setPerformanceHistory([]);
+    setIsRecoveryActive(false);
   };
 
   // Enregistrer une performance et passer à la suivante
@@ -74,25 +86,57 @@ function App() {
     };
     setPerformanceHistory(prev => [...prev, performanceData]);
 
-    const { totalSeries, repsPerSeries } = seriesConfig;
+    const { totalSeries, repsPerSeries, recoveryBetweenReps, recoveryBetweenSeries } = seriesConfig;
 
-    // Incrémenter la répétition
+    // Déterminer la prochaine série/répétition
+    let willChangeSeries = false;
+    let newSeries = currentSeries;
+    let newRep = currentRep;
+
     if (currentRep < repsPerSeries) {
-      setCurrentRep(prev => prev + 1);
+      // Passer à la répétition suivante
+      newRep = currentRep + 1;
     } else if (currentSeries < totalSeries) {
       // Passer à la série suivante
-      setCurrentSeries(prev => prev + 1);
-      setCurrentRep(1);
+      newSeries = currentSeries + 1;
+      newRep = 1;
+      willChangeSeries = true;
     } else {
       // Toutes les séries sont terminées
       alert('🎉 Toutes les séries sont terminées ! Félicitations !');
       return;
     }
 
+    // Déterminer le type de récupération et la durée
+    const recoveryDuration = willChangeSeries ? recoveryBetweenSeries : recoveryBetweenReps;
+    const recType = willChangeSeries ? 'series' : 'rep';
+
     // Réinitialiser le chronomètre pour la course suivante
     if (centerPanelRef.current && centerPanelRef.current.resetForNextRun) {
       centerPanelRef.current.resetForNextRun();
     }
+
+    // Lancer le chronomètre de récupération
+    setNextSeries(newSeries);
+    setNextRep(newRep);
+    setRecoveryType(recType);
+    setIsRecoveryActive(true);
+
+    // Les compteurs seront incrémentés après la récupération
+  };
+
+  // Terminer la récupération et passer à la course suivante
+  const handleRecoveryComplete = () => {
+    setIsRecoveryActive(false);
+    setCurrentSeries(nextSeries);
+    setCurrentRep(nextRep);
+  };
+
+  // Ignorer la récupération
+  const handleSkipRecovery = () => {
+    setIsRecoveryActive(false);
+    setCurrentSeries(nextSeries);
+    setCurrentRep(nextRep);
   };
 
   // Vérifier si toutes les courses sont terminées
@@ -131,6 +175,7 @@ function App() {
     setCurrentSeries(1);
     setCurrentRep(1);
     setPerformanceHistory([]);
+    setIsRecoveryActive(false);
 
     // Appeler la fonction de reset du CenterPanel
     if (centerPanelRef.current && centerPanelRef.current.resetHistory) {
@@ -179,6 +224,13 @@ function App() {
           currentSeries={currentSeries}
           currentRep={currentRep}
           onRunningChange={setIsRunning}
+          isRecoveryActive={isRecoveryActive}
+          recoveryType={recoveryType}
+          recoveryDuration={seriesConfig ? (recoveryType === 'series' ? seriesConfig.recoveryBetweenSeries : seriesConfig.recoveryBetweenReps) : 0}
+          nextSeries={nextSeries}
+          nextRep={nextRep}
+          onRecoveryComplete={handleRecoveryComplete}
+          onSkipRecovery={handleSkipRecovery}
         />
 
         <RightPanel

@@ -7,8 +7,6 @@
 
 /* Bandeau supérieur */
 .top-banner {
-  /* position: sticky; */
-  /* top: 0; */
   z-index: 100;
   background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
   color: white;
@@ -80,7 +78,9 @@
   font-weight: 600;
   transition: all 0.2s;
   min-height: 48px;
-  -moz-appearance: textfield; /* Firefox */
+  /* Correction standard + Firefox */
+  appearance: textfield;
+  -moz-appearance: textfield;
 }
 
 .number-input::-webkit-inner-spin-button,
@@ -113,12 +113,10 @@
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: var(--spacing-lg);
   flex: 1;
-  align-items: start; /* Important pour le scroll indépendant */
+  align-items: start;
 }
 
-
 /* Panneaux */
-/* Panneaux avec scroll indépendant */
 .panel {
   background: var(--color-surface);
   border-radius: var(--radius-lg);
@@ -127,12 +125,12 @@
   display: flex;
   flex-direction: column;
   gap: var(--spacing-lg);
-  max-height: calc(100vh - 180px); /* Hauteur max = hauteur écran - bandeau - padding */
-  overflow-y: auto; /* Scroll vertical indépendant */
+  max-height: calc(100vh - 180px);
+  overflow-y: auto;
   position: relative;
 }
 
-/* Scrollbar personnalisée pour un meilleur look */
+/* Scrollbar personnalisée */
 .panel::-webkit-scrollbar {
   width: 8px;
 }
@@ -617,10 +615,6 @@
   background: linear-gradient(135deg, var(--color-blue) 0%, #2563eb 100%);
 }
 
-.btn-blue {
-  background: linear-gradient(135deg, var(--color-blue) 0%, #2563eb 100%);
-}
-
 .btn-green {
   background: linear-gradient(135deg, var(--color-green) 0%, #059669 100%);
 }
@@ -671,12 +665,6 @@
 
 .lap-list::-webkit-scrollbar-thumb:hover {
   background: var(--color-secondary);
-}
-
-.lap-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
 }
 
 .lap-item {
@@ -892,6 +880,8 @@
   transition: border-color 0.2s;
   min-height: 48px;
   box-sizing: border-box;
+  /* Correction standard + Firefox */
+  appearance: textfield;
   -moz-appearance: textfield;
 }
 
@@ -1510,6 +1500,7 @@
     color: var(--color-text);
   }
 }
+
 /* Footer copyright */
 .app-footer {
   background: var(--color-background);
@@ -1544,6 +1535,7 @@
     font-size: 0.8rem;
   }
 }
+
 /* Boutons séries */
 .btn-series {
   width: 100%;
@@ -1736,6 +1728,7 @@
     font-size: 1rem;
   }
 }
+
 /* Bilan cumulatif des performances */
 .cumulative-performance-box {
   background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
@@ -1823,6 +1816,7 @@
     gap: var(--spacing-xs);
   }
 }
+
 /* Bouton valider et passer à la suivante */
 .btn-validate-next {
   width: 100%;
@@ -1881,6 +1875,7 @@
 .btn-validate-final:active {
   transform: scale(0.98);
 }
+
 /* Input personnalisé pour longueur de piste */
 .custom-input-group {
   display: flex;
@@ -1925,6 +1920,7 @@
   background: rgba(255, 255, 255, 0.3);
   border-color: white;
 }
+
 /* Style pour l'info RPE */
 .rpe-info {
   background: linear-gradient(135deg, #60a5fa 0%, #c084fc 100%);
@@ -1942,6 +1938,7 @@
     font-size: 1rem;
   }
 }
+
 /* Effet de focus sur la colonne centrale pendant la course */
 .panel-dimmed {
   opacity: 0.4;
@@ -1964,6 +1961,7 @@
   position: relative;
   z-index: 1;
 }
+
 /* Styles pour la modale de séries agrandie */
 .modal-series {
   max-width: 600px;
@@ -2209,5 +2207,166 @@
 
   .recovery-time {
     font-size: 3.5rem;
+  }
+}
+
+/* ========================================
+   GRAPHIQUE D'ÉVOLUTION DE LA VITESSE
+   ======================================== */
+
+.speed-chart-container {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  padding: var(--spacing-lg);
+  border-radius: var(--radius-md);
+  margin-top: var(--spacing-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.speed-chart-container h3 {
+  margin: 0 0 var(--spacing-md) 0;
+  color: var(--color-text);
+}
+
+.speed-chart {
+  width: 100%;
+  height: 250px;
+  background: white;
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-sm);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Grille du graphique */
+.chart-grid-line {
+  stroke: #e5e7eb;
+  stroke-width: 0.3;
+  stroke-dasharray: 2, 2;
+}
+
+/* Labels */
+.chart-label {
+  font-size: 3px;
+  fill: #6b7280;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.chart-x-label {
+  font-size: 3px;
+  fill: #6b7280;
+  font-weight: 500;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.chart-axis-label {
+  font-size: 3.5px;
+  fill: #9ca3af;
+  font-weight: 600;
+  font-family: system-ui, -apple-system, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Ligne de vitesse cible */
+.chart-target-line {
+  stroke: #f59e0b;
+  stroke-width: 0.5;
+  stroke-dasharray: 3, 2;
+  opacity: 0.8;
+}
+
+.chart-target-label {
+  font-size: 3px;
+  fill: #f59e0b;
+  font-weight: 600;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Zone sous la courbe */
+.chart-area {
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+/* Courbe principale */
+.chart-line {
+  stroke: var(--color-primary);
+  stroke-width: 0.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+  transition: stroke-width 0.3s ease;
+}
+
+/* Points de données */
+.chart-point-group {
+  transition: transform 0.2s ease;
+  cursor: pointer;
+}
+
+.chart-point-group:hover {
+  transform: scale(1.3);
+}
+
+.chart-point-bg {
+  transition: r 0.2s ease;
+}
+
+.chart-point {
+  transition: r 0.2s ease, opacity 0.3s ease;
+}
+
+.chart-point-group:hover .chart-point-bg {
+  r: 2;
+}
+
+.chart-point-group:hover .chart-point {
+  r: 1.6;
+}
+
+/* Couleurs des points selon la performance */
+.chart-point-blue {
+  fill: var(--color-blue);
+  stroke: white;
+  stroke-width: 0.3;
+}
+
+.chart-point-green {
+  fill: var(--color-green);
+  stroke: white;
+  stroke-width: 0.3;
+}
+
+.chart-point-yellow {
+  fill: var(--color-yellow);
+  stroke: white;
+  stroke-width: 0.3;
+}
+
+.chart-point-red {
+  fill: var(--color-red);
+  stroke: white;
+  stroke-width: 0.3;
+}
+
+/* Animation d'entrée */
+@keyframes chartFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.speed-chart-container {
+  animation: chartFadeIn 0.5s ease-out;
+}
+
+/* Responsive - adapter la hauteur sur mobile */
+@media (max-width: 768px) {
+  .speed-chart {
+    height: 200px;
   }
 }

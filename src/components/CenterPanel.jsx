@@ -7,6 +7,7 @@ import {
   calculateObservedSpeed,
   getSpeedColor
 } from '../utils/calculations';
+import RecoveryTimer from './RecoveryTimer';
 
 /**
  * Composant : Panneau central - Gestion de la course en direct
@@ -21,7 +22,14 @@ const CenterPanel = forwardRef(({
   seriesConfig,
   currentSeries,
   currentRep,
-  onRunningChange
+  onRunningChange,
+  isRecoveryActive,
+  recoveryType,
+  recoveryDuration,
+  nextSeries,
+  nextRep,
+  onRecoveryComplete,
+  onSkipRecovery
 }, ref) => {
   const [isHalfLap, setIsHalfLap] = useState(false);
   const [lapHistory, setLapHistory] = useState([]);
@@ -304,6 +312,20 @@ const CenterPanel = forwardRef(({
             ))}
           </div>
         </div>
+      )}
+
+      {/* Chronomètre de récupération */}
+      {isRecoveryActive && (
+        <RecoveryTimer
+          duration={recoveryDuration}
+          type={recoveryType}
+          nextSeries={nextSeries}
+          nextRep={nextRep}
+          totalSeries={seriesConfig.totalSeries}
+          repsPerSeries={seriesConfig.repsPerSeries}
+          onComplete={onRecoveryComplete}
+          onSkip={onSkipRecovery}
+        />
       )}
     </div>
   );

@@ -27,6 +27,8 @@ const LeftPanel = ({
   const [showSeriesModal, setShowSeriesModal] = useState(false);
   const [totalSeries, setTotalSeries] = useState(3);
   const [repsPerSeries, setRepsPerSeries] = useState(5);
+  const [recoveryBetweenReps, setRecoveryBetweenReps] = useState(60); // en secondes
+  const [recoveryBetweenSeries, setRecoveryBetweenSeries] = useState(180); // en secondes
 
   // Options pour les sélecteurs
   const durationOptions = [0.5, ...Array.from({ length: 60 }, (_, i) => 1 + i * 0.5)]; // 30s à 30 min
@@ -47,17 +49,27 @@ const LeftPanel = ({
   };
 
   const handleValidateSeries = () => {
-    if (totalSeries > 0 && repsPerSeries > 0) {
-      onCreateSeries(totalSeries, repsPerSeries);
+    if (totalSeries > 0 && repsPerSeries > 0 && recoveryBetweenReps >= 0 && recoveryBetweenSeries >= 0) {
+      onCreateSeries(totalSeries, repsPerSeries, recoveryBetweenReps, recoveryBetweenSeries);
       setShowSeriesModal(false);
     } else {
-      alert('Veuillez entrer des valeurs valides (minimum 1)');
+      alert('Veuillez entrer des valeurs valides');
     }
   };
 
   const handleCancelSeriesConfig = () => {
     if (window.confirm('Voulez-vous annuler la configuration des séries ?')) {
       onCancelSeries();
+    }
+  };
+
+  const formatRecoveryTime = (seconds) => {
+    if (seconds < 60) {
+      return `${seconds}s`;
+    } else {
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      return secs > 0 ? `${mins}min ${secs}s` : `${mins}min`;
     }
   };
 
@@ -162,7 +174,9 @@ const LeftPanel = ({
           <div className="series-info">
             <p className="series-config">
               <strong>Séries configurées :</strong><br />
-              {seriesConfig.totalSeries} série{seriesConfig.totalSeries > 1 ? 's' : ''} × {seriesConfig.repsPerSeries} répétition{seriesConfig.repsPerSeries > 1 ? 's' : ''}
+              {seriesConfig.totalSeries} série{seriesConfig.totalSeries > 1 ? 's' : ''} × {seriesConfig.repsPerSeries} répétition{seriesConfig.repsPerSeries > 1 ? 's' : ''}<br />
+              <span className="recovery-info">Récup (r): {formatRecoveryTime(seriesConfig.recoveryBetweenReps)}</span><br />
+              <span className="recovery-info">Récup (R): {formatRecoveryTime(seriesConfig.recoveryBetweenSeries)}</span>
             </p>
             <button
               className="btn-cancel-series"
@@ -179,7 +193,7 @@ const LeftPanel = ({
       {/* Modale de création de séries */}
       {showSeriesModal && (
         <div className="modal-overlay" onClick={handleCloseSeriesModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-content modal-series" onClick={(e) => e.stopPropagation()}>
             <h3>📋 Créer des séries</h3>
             <div className="modal-body">
               <div className="form-group">
@@ -205,6 +219,44 @@ const LeftPanel = ({
                   max="20"
                   className="form-input"
                 />
+              </div>
+              
+              <div className="recovery-section">
+                <h4>⏱️ Temps de récupération</h4>
+                <div className="form-group">
+                  <label htmlFor="recovery-reps">
+                    Entre répétitions (r) :
+                    <span className="label-helper">Récupération entre chaque répétition d'une même série</span>
+                  </label>
+                  <input
+                    type="number"
+                    id="recovery-reps"
+                    value={recoveryBetweenReps}
+                    onChange={(e) => setRecoveryBetweenReps(parseInt(e.target.value) || 0)}
+                    min="0"
+                    max="600"
+                    step="15"
+                    className="form-input"
+                  />
+                  <span className="input-unit-inline">{formatRecoveryTime(recoveryBetweenReps)}</span>
+                </div>
+                <div className="form-group">
+                  <label htmlFor="recovery-series">
+                    Entre séries (R) :
+                    <span className="label-helper">Récupération entre chaque série</span>
+                  </label>
+                  <input
+                    type="number"
+                    id="recovery-series"
+                    value={recoveryBetweenSeries}
+                    onChange={(e) => setRecoveryBetweenSeries(parseInt(e.target.value) || 0)}
+                    min="0"
+                    max="900"
+                    step="15"
+                    className="form-input"
+                  />
+                  <span className="input-unit-inline">{formatRecoveryTime(recoveryBetweenSeries)}</span>
+                </div>
               </div>
             </div>
             <div className="modal-footer">

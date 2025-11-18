@@ -290,12 +290,12 @@ const CenterPanel = forwardRef(({
         )}
       </div>
 
-      {/* Historique des passages */}
+      {/* Historique complet des passages */}
       {lapHistory.length > 0 && (
         <div className="lap-history">
-          <h3>Historique</h3>
+          <h3>Historique complet ({lapHistory.length} passage{lapHistory.length > 1 ? 's' : ''})</h3>
           <div className="lap-list">
-            {lapHistory.slice(-5).reverse().map((lap, index) => (
+            {lapHistory.slice().reverse().map((lap, index) => (
               <div key={index} className={`lap-item ${lap.color}`}>
                 <span className="lap-number">#{lap.lapNumber}</span>
                 <span className="lap-time">{formatTime(lap.time)}</span>

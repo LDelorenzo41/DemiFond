@@ -251,10 +251,35 @@ function App() {
         />
       </div>
 
-      {/* Footer avec copyright */}
+            {/* Footer avec copyright et liens */}
       <footer className="app-footer">
-        <p>© 2025 LD Teach & Tech</p>
+        <div className="footer-content">
+          <p className="footer-copyright">© 2025 LD Teach & Tech</p>
+          <div className="footer-apps">
+            <p className="footer-title">Mes autres applications</p>
+            <div className="footer-links">
+              <a 
+                href="https://profassist.net" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="footer-link"
+              >
+                ProfAssist
+              </a>
+              <span className="footer-separator">•</span>
+              <a 
+                href="https://epsegal.netlify.app" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="footer-link"
+              >
+                EPS Égalité
+              </a>
+            </div>
+          </div>
+        </div>
       </footer>
+
     </div>
   );
 }

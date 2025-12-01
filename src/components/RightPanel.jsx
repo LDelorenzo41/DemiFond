@@ -1,6 +1,5 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo } from 'react';
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 import ExportModal from './ExportModal';
 import {
   calculateTargetSpeed,
@@ -24,7 +23,7 @@ const SpeedChart = ({ lapData, targetSpeed }) => {
 
   if (!lapData || lapData.length === 0) return null;
 
-  const speeds = lapData.map(lap => lap.speed);
+  const speeds = lapData.map(lap => lap.speed || 0);
   const maxSpeed = Math.max(...speeds, targetSpeed + 0.5);
   const minSpeed = Math.min(...speeds, targetSpeed - 0.5);
   const speedRange = maxSpeed - minSpeed || 1;
@@ -166,7 +165,7 @@ const SpeedChart = ({ lapData, targetSpeed }) => {
             r="1.2"
             className={`chart-point chart-point-${point.lap.color}`}
           >
-            <title>Tour {point.lap.lapNumber}: {point.lap.speed.toFixed(2)} km/h</title>
+            <title>Tour {point.lap.lapNumber}: {(point.lap.speed || 0).toFixed(2)} km/h</title>
           </circle>
         </g>
       ))}
@@ -220,8 +219,6 @@ const RightPanel = ({ trackLength, markerDistance, vma, vmaPercent, duration, is
   const [actualLaps, setActualLaps] = useState('');
   const [actualMarkers, setActualMarkers] = useState('');
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
-  
-  const chartRef = useRef(null);
 
   const targetSpeed = calculateTargetSpeed(vma, vmaPercent);
   const lapTime = calculateLapTime(trackLength, targetSpeed, false); // Toujours par tour complet pour le tableau
@@ -283,13 +280,13 @@ const RightPanel = ({ trackLength, markerDistance, vma, vmaPercent, duration, is
       appreciation,
       color
     };
-  }, [actualLaps, actualMarkers, expectedDistance, trackLength, markerDistance]);
+  }, [actualLaps, actualMarkers, expectedDistance, trackLength, markerDistance, duration, targetSpeed]);
 
   // Calculer les statistiques si on a des données
   const stats = useMemo(() => {
     if (!lapData || lapData.length === 0) return null;
 
-    const speeds = lapData.map(lap => lap.speed);
+    const speeds = lapData.map(lap => lap.speed || 0);
     const avgSpeed = speeds.reduce((a, b) => a + b, 0) / speeds.length;
     const maxSpeed = Math.max(...speeds);
     const minSpeed = Math.min(...speeds);
@@ -309,123 +306,229 @@ const RightPanel = ({ trackLength, markerDistance, vma, vmaPercent, duration, is
   }, [lapData]);
 
   /**
+   * Fonction pour dessiner le graphique directement dans le PDF avec jsPDF
+   */
+  const drawChartInPDF = (pdf, lapData, targetSpeed, startX, startY, width, height) => {
+    if (!lapData || lapData.length === 0) return;
+
+    const speeds = lapData.map(lap => lap.speed || 0);
+    const maxSpeed = Math.max(...speeds, targetSpeed + 0.5);
+    const minSpeed = Math.min(...speeds, targetSpeed - 0.5);
+    const speedRange = maxSpeed - minSpeed || 1;
+
+    const padding = { top: 5, right: 10, bottom: 10, left: 15 };
+    const chartWidth = width - padding.left - padding.right;
+    const chartHeight = height - padding.top - padding.bottom;
+
+    // Fond du graphique
+    pdf.setFillColor(255, 255, 255);
+    pdf.rect(startX, startY, width, height, 'F');
+    
+    // Bordure
+    pdf.setDrawColor(229, 231, 235);
+    pdf.setLineWidth(0.5);
+    pdf.rect(startX, startY, width, height, 'S');
+
+    // Grille horizontale
+    pdf.setDrawColor(229, 231, 235);
+    pdf.setLineWidth(0.2);
+    for (let i = 0; i <= 4; i++) {
+      const ratio = i / 4;
+      const y = startY + padding.top + chartHeight * (1 - ratio);
+      pdf.line(startX + padding.left, y, startX + width - padding.right, y);
+      
+      // Labels de vitesse
+      const speed = minSpeed + ratio * speedRange;
+      pdf.setFontSize(7);
+      pdf.setTextColor(107, 114, 128);
+      pdf.text(speed.toFixed(1), startX + padding.left - 3, y + 1, { align: 'right' });
+    }
+
+    // Calculer les points
+    const points = lapData.map((lap, index) => {
+      const x = startX + padding.left + (chartWidth * index) / (lapData.length - 1 || 1);
+      const speed = lap.speed || 0;
+      const normalizedSpeed = (speed - minSpeed) / speedRange;
+      const y = startY + padding.top + chartHeight * (1 - normalizedSpeed);
+      return { x, y, lap };
+    });
+
+    // Ligne de vitesse cible
+    const targetNormalized = (targetSpeed - minSpeed) / speedRange;
+    const targetY = startY + padding.top + chartHeight * (1 - targetNormalized);
+    
+    pdf.setDrawColor(245, 158, 11);
+    pdf.setLineWidth(0.5);
+    pdf.setLineDash([2, 2]);
+    pdf.line(startX + padding.left, targetY, startX + width - padding.right, targetY);
+    pdf.setLineDash([]);
+    
+    pdf.setFontSize(7);
+    pdf.setTextColor(245, 158, 11);
+    pdf.text('Cible', startX + width - padding.right + 2, targetY + 1);
+
+    // Dessiner la courbe (lignes entre les points)
+    pdf.setDrawColor(59, 130, 246);
+    pdf.setLineWidth(1);
+    for (let i = 0; i < points.length - 1; i++) {
+      pdf.line(points[i].x, points[i].y, points[i + 1].x, points[i + 1].y);
+    }
+
+    // Dessiner les points
+    points.forEach((point) => {
+      const colorMap = {
+        blue: [59, 130, 246],
+        green: [34, 197, 94],
+        yellow: [234, 179, 8],
+        red: [239, 68, 68]
+      };
+      
+      const color = colorMap[point.lap.color] || [107, 114, 128];
+      
+      // Point blanc de fond
+      pdf.setFillColor(255, 255, 255);
+      pdf.circle(point.x, point.y, 1.5, 'F');
+      
+      // Point coloré
+      pdf.setFillColor(...color);
+      pdf.circle(point.x, point.y, 1.2, 'F');
+    });
+
+    // Labels de l'axe X (tours)
+    pdf.setFontSize(7);
+    pdf.setTextColor(107, 114, 128);
+    points.forEach((point, index) => {
+      const showLabel = lapData.length <= 10 || index % 2 === 0 || index === lapData.length - 1;
+      if (showLabel && point.lap.lapNumber) {
+        pdf.text(point.lap.lapNumber.toString(), point.x, startY + height - 2, { align: 'center' });
+      }
+    });
+
+    // Labels des axes
+    pdf.setFontSize(8);
+    pdf.setTextColor(156, 163, 175);
+    pdf.text('km/h', startX + 2, startY + padding.top - 2);
+    pdf.text('Tours', startX + width - 15, startY + height - 2);
+  };
+
+  /**
    * Fonction pour générer le PDF
    */
   const generatePDF = async (exportInfo) => {
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
-    const margin = 15;
-    let yPos = margin;
+    try {
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 15;
+      let yPos = margin;
 
-    // Couleurs
-    const primaryColor = [59, 130, 246]; // bleu
-    const textColor = [31, 41, 55]; // gris foncé
-    const lightGray = [229, 231, 235];
+      // Couleurs
+      const primaryColor = [59, 130, 246]; // bleu
+      const textColor = [31, 41, 55]; // gris foncé
+      const lightGray = [229, 231, 235];
 
-    // === EN-TÊTE ===
-    pdf.setFillColor(...primaryColor);
-    pdf.rect(0, 0, pageWidth, 35, 'F');
-    
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(20);
-    pdf.setFont('helvetica', 'bold');
-    pdf.text('RAPPORT DE SUIVI D\'ALLURE', pageWidth / 2, 15, { align: 'center' });
-    
-    pdf.setFontSize(10);
-    pdf.setFont('helvetica', 'normal');
-    pdf.text(`Date : ${exportInfo.date}`, pageWidth / 2, 25, { align: 'center' });
+      // === EN-TÊTE ===
+      pdf.setFillColor(...primaryColor);
+      pdf.rect(0, 0, pageWidth, 35, 'F');
+      
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(20);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('RAPPORT DE SUIVI D\'ALLURE', pageWidth / 2, 15, { align: 'center' });
+      
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(`Date : ${exportInfo.date}`, pageWidth / 2, 25, { align: 'center' });
 
-    yPos = 45;
+      yPos = 45;
 
-    // === INFORMATIONS ===
-    pdf.setTextColor(...textColor);
-    pdf.setFontSize(11);
-    pdf.setFont('helvetica', 'bold');
-    pdf.text(`Coureur : ${exportInfo.runnerName}`, margin, yPos);
-    yPos += 7;
-    pdf.text(`Observateur : ${exportInfo.observerName}`, margin, yPos);
-    yPos += 12;
+      // === INFORMATIONS ===
+      pdf.setTextColor(...textColor);
+      pdf.setFontSize(11);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(`Coureur : ${exportInfo.runnerName}`, margin, yPos);
+      yPos += 7;
+      pdf.text(`Observateur : ${exportInfo.observerName}`, margin, yPos);
+      yPos += 12;
 
-    // === CONFIGURATION ===
-    pdf.setFontSize(13);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setTextColor(...primaryColor);
-    pdf.text('CONFIGURATION', margin, yPos);
-    yPos += 7;
-
-    pdf.setFontSize(10);
-    pdf.setFont('helvetica', 'normal');
-    pdf.setTextColor(...textColor);
-    
-    const config = [
-      [`Longueur de piste : ${trackLength} m`, `VMA : ${vma} km/h`],
-      [`Distance repères : ${markerDistance} m`, `% VMA : ${vmaPercent}%`],
-      [`Durée de l'exercice : ${duration} min`, `Vitesse cible : ${targetSpeed.toFixed(1)} km/h`],
-      [`Mode : ${isHalfLap ? 'Demi-tour' : 'Tour complet'}`, `Temps par tour : ${formatTime(lapTime)}`]
-    ];
-
-    config.forEach(([left, right]) => {
-      pdf.text(left, margin, yPos);
-      pdf.text(right, pageWidth / 2 + 5, yPos);
-      yPos += 6;
-    });
-
-    yPos += 5;
-
-    // === OBJECTIF ===
-    pdf.setFontSize(13);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setTextColor(...primaryColor);
-    pdf.text('OBJECTIF', margin, yPos);
-    yPos += 7;
-
-    pdf.setFontSize(10);
-    pdf.setFont('helvetica', 'normal');
-    pdf.setTextColor(...textColor);
-    pdf.text(`${expectedLaps} tours + ${expectedMarkers} repères (${Math.round(expectedDistance)} m)`, margin, yPos);
-    yPos += 10;
-
-    // === STATISTIQUES ===
-    if (stats) {
+      // === CONFIGURATION ===
       pdf.setFontSize(13);
       pdf.setFont('helvetica', 'bold');
       pdf.setTextColor(...primaryColor);
-      pdf.text('STATISTIQUES', margin, yPos);
+      pdf.text('CONFIGURATION', margin, yPos);
       yPos += 7;
 
       pdf.setFontSize(10);
       pdf.setFont('helvetica', 'normal');
       pdf.setTextColor(...textColor);
       
-      pdf.text(`Nombre de passages : ${stats.totalLaps}`, margin, yPos);
-      yPos += 6;
-      pdf.text(`Vitesse moyenne : ${stats.avgSpeed.toFixed(1)} km/h`, margin, yPos);
-      yPos += 6;
-      pdf.text(`Vitesse min / max : ${stats.minSpeed.toFixed(1)} / ${stats.maxSpeed.toFixed(1)} km/h`, margin, yPos);
-      yPos += 6;
+      const config = [
+        [`Longueur de piste : ${trackLength} m`, `VMA : ${vma} km/h`],
+        [`Distance repères : ${markerDistance} m`, `% VMA : ${vmaPercent}%`],
+        [`Durée de l'exercice : ${duration} min`, `Vitesse cible : ${(targetSpeed || 0).toFixed(1)} km/h`],
+        [`Mode : ${isHalfLap ? 'Demi-tour' : 'Tour complet'}`, `Temps par tour : ${formatTime(lapTime)}`]
+      ];
 
-      // Répartition des couleurs
-      const colorLabels = {
-        blue: 'Excellent (Bleu)',
-        green: 'Très bien (Vert)',
-        yellow: 'Correct (Jaune)',
-        red: 'À améliorer (Rouge)'
-      };
-      
-      pdf.text('Répartition des performances :', margin, yPos);
-      yPos += 6;
-      Object.entries(stats.colorCounts).forEach(([color, count]) => {
-        pdf.text(`  • ${colorLabels[color]} : ${count}`, margin + 5, yPos);
-        yPos += 5;
+      config.forEach(([left, right]) => {
+        pdf.text(left, margin, yPos);
+        pdf.text(right, pageWidth / 2 + 5, yPos);
+        yPos += 6;
       });
 
       yPos += 5;
-    }
 
-    // === GRAPHIQUE ===
-    if (lapData && lapData.length > 0 && chartRef.current) {
-      try {
+      // === OBJECTIF ===
+      pdf.setFontSize(13);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setTextColor(...primaryColor);
+      pdf.text('OBJECTIF', margin, yPos);
+      yPos += 7;
+
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setTextColor(...textColor);
+      pdf.text(`${expectedLaps} tours + ${expectedMarkers} repères (${Math.round(expectedDistance)} m)`, margin, yPos);
+      yPos += 10;
+
+      // === STATISTIQUES ===
+      if (stats) {
+        pdf.setFontSize(13);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setTextColor(...primaryColor);
+        pdf.text('STATISTIQUES', margin, yPos);
+        yPos += 7;
+
+        pdf.setFontSize(10);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setTextColor(...textColor);
+        
+        pdf.text(`Nombre de passages : ${stats.totalLaps}`, margin, yPos);
+        yPos += 6;
+        pdf.text(`Vitesse moyenne : ${(stats.avgSpeed || 0).toFixed(1)} km/h`, margin, yPos);
+        yPos += 6;
+        pdf.text(`Vitesse min / max : ${(stats.minSpeed || 0).toFixed(1)} / ${(stats.maxSpeed || 0).toFixed(1)} km/h`, margin, yPos);
+        yPos += 6;
+
+        // Répartition des couleurs
+        const colorLabels = {
+          blue: 'Excellent (Bleu)',
+          green: 'Très bien (Vert)',
+          yellow: 'Correct (Jaune)',
+          red: 'À améliorer (Rouge)'
+        };
+        
+        pdf.text('Répartition des performances :', margin, yPos);
+        yPos += 6;
+        Object.entries(stats.colorCounts).forEach(([color, count]) => {
+          pdf.text(`  • ${colorLabels[color]} : ${count}`, margin + 5, yPos);
+          yPos += 5;
+        });
+
+        yPos += 5;
+      }
+
+      // === GRAPHIQUE ===
+      if (lapData && lapData.length > 0) {
         // Vérifier si on a assez de place, sinon nouvelle page
         if (yPos > pageHeight - 80) {
           pdf.addPage();
@@ -438,105 +541,102 @@ const RightPanel = ({ trackLength, markerDistance, vma, vmaPercent, duration, is
         pdf.text('ÉVOLUTION DE LA VITESSE', margin, yPos);
         yPos += 7;
 
-        // Capturer le graphique SVG
-        const canvas = await html2canvas(chartRef.current, {
-          backgroundColor: '#ffffff',
-          scale: 2
-        });
-        
-        const imgData = canvas.toDataURL('image/png');
-        const imgWidth = pageWidth - 2 * margin;
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-        
-        pdf.addImage(imgData, 'PNG', margin, yPos, imgWidth, imgHeight);
-        yPos += imgHeight + 10;
-      } catch (error) {
-        console.error('Erreur capture graphique:', error);
-      }
-    }
-
-    // === HISTORIQUE DES PASSAGES ===
-    if (lapData && lapData.length > 0) {
-      // Nouvelle page si nécessaire
-      if (yPos > pageHeight - 60) {
-        pdf.addPage();
-        yPos = margin;
+        // Dessiner le graphique directement avec jsPDF
+        const chartWidth = pageWidth - 2 * margin;
+        const chartHeight = 60;
+        drawChartInPDF(pdf, lapData, targetSpeed, margin, yPos, chartWidth, chartHeight);
+        yPos += chartHeight + 10;
       }
 
-      pdf.setFontSize(13);
-      pdf.setFont('helvetica', 'bold');
-      pdf.setTextColor(...primaryColor);
-      pdf.text('HISTORIQUE DES PASSAGES', margin, yPos);
-      yPos += 7;
-
-      // En-tête du tableau
-      pdf.setFillColor(...lightGray);
-      pdf.rect(margin, yPos - 5, pageWidth - 2 * margin, 8, 'F');
-      
-      pdf.setFontSize(9);
-      pdf.setFont('helvetica', 'bold');
-      pdf.setTextColor(...textColor);
-      
-      const colX = {
-        tour: margin + 3,
-        temps: margin + 20,
-        vitesse: margin + 50,
-        ecart: margin + 80,
-        eval: margin + 110
-      };
-
-      pdf.text('Tour', colX.tour, yPos);
-      pdf.text('Temps', colX.temps, yPos);
-      pdf.text('Vitesse', colX.vitesse, yPos);
-      pdf.text('Écart', colX.ecart, yPos);
-      pdf.text('Évaluation', colX.eval, yPos);
-      yPos += 8;
-
-      // Données
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(8);
-
-      lapData.forEach((lap, index) => {
+      // === HISTORIQUE DES PASSAGES ===
+      if (lapData && lapData.length > 0) {
         // Nouvelle page si nécessaire
-        if (yPos > pageHeight - 15) {
+        if (yPos > pageHeight - 60) {
           pdf.addPage();
           yPos = margin;
         }
 
-        const evalLabels = {
-          blue: 'Excellent',
-          green: 'Très bien',
-          yellow: 'Correct',
-          red: 'À améliorer'
+        pdf.setFontSize(13);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setTextColor(...primaryColor);
+        pdf.text('HISTORIQUE DES PASSAGES', margin, yPos);
+        yPos += 7;
+
+        // En-tête du tableau
+        pdf.setFillColor(...lightGray);
+        pdf.rect(margin, yPos - 5, pageWidth - 2 * margin, 8, 'F');
+        
+        pdf.setFontSize(9);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setTextColor(...textColor);
+        
+        const colX = {
+          tour: margin + 3,
+          temps: margin + 20,
+          vitesse: margin + 50,
+          ecart: margin + 80,
+          eval: margin + 110
         };
 
-        pdf.text(`${lap.lapNumber}`, colX.tour, yPos);
-        pdf.text(formatTime(lap.lapTime), colX.temps, yPos);
-        pdf.text(`${lap.speed.toFixed(2)} km/h`, colX.vitesse, yPos);
-        pdf.text(`${lap.speedDiff > 0 ? '+' : ''}${lap.speedDiff.toFixed(2)} km/h`, colX.ecart, yPos);
-        pdf.text(evalLabels[lap.color] || '-', colX.eval, yPos);
-        
-        yPos += 6;
-      });
-    }
+        pdf.text('Tour', colX.tour, yPos);
+        pdf.text('Temps', colX.temps, yPos);
+        pdf.text('Vitesse', colX.vitesse, yPos);
+        pdf.text('Écart', colX.ecart, yPos);
+        pdf.text('Évaluation', colX.eval, yPos);
+        yPos += 8;
 
-    // === PIED DE PAGE ===
-    const totalPages = pdf.internal.pages.length - 1;
-    for (let i = 1; i <= totalPages; i++) {
-      pdf.setPage(i);
-      pdf.setFontSize(8);
-      pdf.setTextColor(150, 150, 150);
-      pdf.text(
-        `Page ${i} / ${totalPages} - Généré par DemiFond Tracker`,
-        pageWidth / 2,
-        pageHeight - 10,
-        { align: 'center' }
-      );
-    }
+        // Données
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(8);
 
-    // Sauvegarder
-    const filename = `rapport-allure-${exportInfo.runnerName.replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.pdf`;
-    pdf.save(filename);
+        lapData.forEach((lap) => {
+          // Nouvelle page si nécessaire
+          if (yPos > pageHeight - 15) {
+            pdf.addPage();
+            yPos = margin;
+          }
+
+          const evalLabels = {
+            blue: 'Excellent',
+            green: 'Très bien',
+            yellow: 'Correct',
+            red: 'À améliorer'
+          };
+
+          const speed = lap.speed || 0;
+          const speedDiff = speed - targetSpeed;
+
+          pdf.text(`${lap.lapNumber || '-'}`, colX.tour, yPos);
+          pdf.text(formatTime(lap.time || 0), colX.temps, yPos);
+          pdf.text(`${speed.toFixed(2)} km/h`, colX.vitesse, yPos);
+          pdf.text(`${speedDiff > 0 ? '+' : ''}${speedDiff.toFixed(2)} km/h`, colX.ecart, yPos);
+          pdf.text(evalLabels[lap.color] || '-', colX.eval, yPos);
+          
+          yPos += 6;
+        });
+      }
+
+      // === PIED DE PAGE ===
+      const totalPages = pdf.internal.pages.length - 1;
+      for (let i = 1; i <= totalPages; i++) {
+        pdf.setPage(i);
+        pdf.setFontSize(8);
+        pdf.setTextColor(150, 150, 150);
+        pdf.text(
+          `Page ${i} / ${totalPages} - Généré par DemiFond Tracker`,
+          pageWidth / 2,
+          pageHeight - 10,
+          { align: 'center' }
+        );
+      }
+
+      // Sauvegarder
+      const filename = `rapport-allure-${exportInfo.runnerName.replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.pdf`;
+      pdf.save(filename);
+    } catch (error) {
+      console.error('Erreur génération PDF:', error);
+      throw error;
+    }
   };
 
   const handleExportClick = () => {
@@ -556,14 +656,14 @@ const RightPanel = ({ trackLength, markerDistance, vma, vmaPercent, duration, is
           <strong>Temps par tour:</strong> {formatTime(lapTime)}
         </p>
         <p>
-          <strong>Vitesse cible:</strong> {targetSpeed.toFixed(1)} km/h
+          <strong>Vitesse cible:</strong> {(targetSpeed || 0).toFixed(1)} km/h
         </p>
         <p>
           <strong>Objectif:</strong> {expectedLaps} tours + {expectedMarkers} repères
         </p>
       </div>
 
-      {/* Tableau des allures simplifié */}
+      {/* Tableau des allures simplifié - TOUJOURS VISIBLE */}
       <div className="pace-table-container">
         <table className="pace-table">
           <thead>
@@ -661,12 +761,12 @@ const RightPanel = ({ trackLength, markerDistance, vma, vmaPercent, duration, is
             </div>
             <div className="stat-item">
               <span className="stat-label">Vitesse moy.:</span>
-              <span className="stat-value">{stats.avgSpeed.toFixed(1)} km/h</span>
+              <span className="stat-value">{(stats.avgSpeed || 0).toFixed(1)} km/h</span>
             </div>
             <div className="stat-item">
               <span className="stat-label">Min / Max:</span>
               <span className="stat-value">
-                {stats.minSpeed.toFixed(1)} / {stats.maxSpeed.toFixed(1)} km/h
+                {(stats.minSpeed || 0).toFixed(1)} / {(stats.maxSpeed || 0).toFixed(1)} km/h
               </span>
             </div>
 
@@ -687,7 +787,7 @@ const RightPanel = ({ trackLength, markerDistance, vma, vmaPercent, duration, is
 
       {/* Graphique d'évolution de la vitesse */}
       {lapData && lapData.length > 0 && (
-        <div className="speed-chart-container" ref={chartRef}>
+        <div className="speed-chart-container">
           <h3>📈 Évolution de la vitesse</h3>
           <SpeedChart lapData={lapData} targetSpeed={targetSpeed} />
         </div>
@@ -716,3 +816,4 @@ const RightPanel = ({ trackLength, markerDistance, vma, vmaPercent, duration, is
 };
 
 export default RightPanel;
+

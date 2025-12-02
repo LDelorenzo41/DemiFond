@@ -18,8 +18,8 @@ const TopBanner = ({
   const [isCustomTrackLength, setIsCustomTrackLength] = useState(false);
   const [customTrackLength, setCustomTrackLength] = useState('');
 
-  // Générer les options de VMA (8 à 20 km/h par pas de 0.25)
-  const vmaOptions = Array.from({ length: 49 }, (_, i) => 8 + i * 0.25); // 8 à 20 km/h par pas de 0.25
+  // Générer les options de VMA (6 à 20 km/h par pas de 0.25)
+  const vmaOptions = Array.from({ length: 57 }, (_, i) => 6 + i * 0.25); // 6 à 20 km/h par pas de 0.25
 
   // Générer les options de distance entre repères (5 à 50m par pas de 5m)
   const markerDistanceOptions = Array.from({ length: 10 }, (_, i) => 5 + i * 5); // 5 à 50m par pas de 5m

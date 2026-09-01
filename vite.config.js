@@ -55,10 +55,15 @@ export default defineConfig({
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
       },
 
-      // Permet de vérifier l'installabilité et le hors-ligne dès `npm run dev`.
-      // Sans effet sur le build : le plugin force enabled=false hors mode `serve`.
+      // Désactivé par défaut : un service worker enregistré sur
+      // http://localhost:5173 survit à l'arrêt du serveur et intercepte ensuite
+      // les navigations des AUTRES projets Vite servis sur ce même port.
+      // Pour tester l'installabilité ou le hors-ligne en dev :
+      //   VITE_PWA_DEV=true npm run dev
+      // La recette de référence reste `npm run build && npm run preview`, qui
+      // sert le service worker réellement déployé.
       devOptions: {
-        enabled: true,
+        enabled: process.env.VITE_PWA_DEV === 'true',
         navigateFallback: 'index.html',
         suppressWarnings: true,
       },

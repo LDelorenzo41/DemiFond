@@ -209,17 +209,6 @@ function App() {
         setMarkerDistance={setMarkerDistance}
       />
 
-      {/* Jamais pendant une course : on n'interrompt pas un chronométrage. */}
-      {showBanner && !isRunning && (
-        <InstallPrompt
-          canInstall={canInstall}
-          showIOSHint={canShowIOSHint}
-          iosBrowser={iosBrowser}
-          onInstall={promptInstall}
-          onDismiss={dismissBanner}
-        />
-      )}
-
       <div className="main-content">
         <LeftPanel
           duration={duration}
@@ -318,7 +307,28 @@ function App() {
         </div>
       </footer>
 
-      <ReloadPrompt isRunning={isRunning} />
+      {/* Pile fixe en bas d'écran : le message de service worker et le bandeau
+          d'installation s'empilent au lieu de se recouvrir, quelle que soit la
+          hauteur de l'un ou de l'autre. */}
+      <div className="pwa-stack">
+        <ReloadPrompt
+          isRunning={isRunning}
+          hasSessionData={
+            isRunning || isRecoveryActive || lapData.length > 0 || Boolean(seriesConfig)
+          }
+        />
+
+        {/* Jamais pendant une course : on n'interrompt pas un chronométrage. */}
+        {showBanner && !isRunning && (
+          <InstallPrompt
+            canInstall={canInstall}
+            showIOSHint={canShowIOSHint}
+            iosBrowser={iosBrowser}
+            onInstall={promptInstall}
+            onDismiss={dismissBanner}
+          />
+        )}
+      </div>
     </div>
   );
 }

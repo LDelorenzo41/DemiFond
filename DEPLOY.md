@@ -90,6 +90,22 @@ L'application fonctionne hors ligne dès le premier chargement terminé, grâce 
   puisse pas en injecter un second, que les navigateurs ignoreraient ;
 - les redirections et en-têtes de `netlify.toml`.
 
+### ⚠️ Premier déploiement après la migration PWA
+
+Le service worker précédent fonctionnait en `autoUpdate` (donc `skipWaiting`).
+Le nouveau est en `prompt` : chez un utilisateur qui a **déjà installé** DemiFond
+ou gardé un onglet ouvert, il s'installe en état `waiting` et ne s'active
+qu'une fois **toutes** les fenêtres de l'application fermées. Un simple
+rechargement (F5) ne suffit pas — l'ancien service worker continue de servir son
+propre `index.html` depuis son précache.
+
+Concrètement : demandez aux utilisateurs déjà équipés de **fermer complètement
+l'application (ou l'onglet) puis de la rouvrir**. À prévoir hors temps de classe.
+
+Les déploiements **suivants** n'ont plus ce comportement : le message
+« Une nouvelle version est disponible » prend le relais et l'utilisateur décide
+du moment.
+
 ### Points à ne pas casser
 
 - **Ne jamais ajouter un second `<link rel="manifest">`** : seul le premier est lu.
@@ -101,6 +117,11 @@ L'application fonctionne hors ligne dès le premier chargement terminé, grâce 
   déploiement — ce qui remettrait à zéro le chronomètre d'une séance en cours.
 - **La règle SPA `/*` doit rester la dernière** de `netlify.toml`, et non forcée :
   sinon elle prendrait le pas sur les fichiers statiques.
+- **Ne pas activer `devOptions.enabled` en dur** : un service worker enregistré
+  sur `localhost:5173` survit à l'arrêt du serveur et intercepte les navigations
+  des autres projets Vite servis sur ce port. Si cela arrive :
+  DevTools → Application → Service Workers → **Unregister**, ou
+  `chrome://serviceworker-internals`.
 
 `npm run build` exécute `scripts/check-precache.mjs`, qui échoue si le précache
 est incomplet, si une icône déclarée est absente, ou s'il y a plusieurs balises

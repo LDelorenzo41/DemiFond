@@ -2570,18 +2570,34 @@
      de l'enseignant en train de chronométrer.
    ======================================== */
 
-.install-banner {
+/* Pile fixe en bas d'écran. Les deux surfaces PWA y sont empilées plutôt que
+   superposées : quelle que soit la hauteur du bandeau (les étapes iOS le font
+   grandir), le message de service worker reste entièrement visible. */
+.pwa-stack {
   position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 150; /* au-dessus de .top-banner (100) */
+  z-index: 150; /* au-dessus de .top-banner (100), sous les modales (1000) */
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  /* Respecte la barre d'accueil des iPhone sans bouton. */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  /* La pile occupe toute la largeur : sans cela elle intercepterait les clics
+     destinés à l'application dans les zones vides. */
+  pointer-events: none;
+}
+
+.pwa-stack > * {
+  pointer-events: auto;
+}
+
+.install-banner {
   background: #eff6ff;
   border-top: 1px solid #bfdbfe;
   color: var(--color-text);
   padding: var(--spacing-sm) var(--spacing-md);
-  /* Respecte la barre d'accueil des iPhone sans bouton. */
-  padding-bottom: calc(var(--spacing-sm) + env(safe-area-inset-bottom, 0px));
   box-shadow: 0 -2px 8px rgb(0 0 0 / 0.08);
   max-height: 45vh;
   overflow-y: auto; /* les étapes iOS ne peuvent pas déborder de l'écran */
@@ -2658,12 +2674,10 @@
   line-height: 1.6;
 }
 
-/* Messages du service worker : superposés, ils ne déplacent aucun contenu. */
+/* Messages du service worker : dans la pile fixe, ils ne déplacent aucun contenu. */
 .pwa-toast {
-  position: fixed;
-  right: var(--spacing-md);
-  bottom: var(--spacing-md);
-  z-index: 200; /* au-dessus de .top-banner (z-index: 100) */
+  align-self: flex-end;
+  margin: 0 var(--spacing-md);
   max-width: min(360px, calc(100vw - 2 * var(--spacing-md)));
   display: flex;
   flex-direction: column;
@@ -2675,12 +2689,6 @@
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   font-size: 0.9rem;
-}
-
-/* Quand le bandeau d'installation occupe le bas de l'écran, le toast se pose
-   au-dessus de lui plutôt que par-dessus. */
-.app:has(.install-banner) .pwa-toast {
-  bottom: calc(var(--spacing-md) + 72px);
 }
 
 .pwa-toast-text {
@@ -2745,15 +2753,14 @@
   }
 
   .pwa-toast {
-    left: var(--spacing-md);
+    align-self: stretch;
     max-width: none;
   }
 }
 
 /* Rien de tout cela ne doit apparaître à l'impression. */
 @media print {
-  .install-banner,
-  .pwa-toast {
+  .pwa-stack {
     display: none !important;
   }
 }

@@ -288,8 +288,10 @@ Toutes les formules sont dans `src/utils/calculations.js` :
   (DevTools > Application > Service Workers).
 - DevTools > Application > Cache Storage doit contenir `index.html`, le bundle
   `assets/index-*.js` et la feuille `assets/index-*.css`.
-- En développement, le Service Worker n'est actif que grâce à `devOptions`
-  (`npm run dev`) ; la recette finale se fait avec `npm run build && npm run preview`.
+- En développement, le Service Worker est **désactivé par défaut**. Pour tester
+  l'installabilité ou le hors-ligne pendant `dev` : `VITE_PWA_DEV=true npm run dev`.
+  La recette de référence reste `npm run build && npm run preview`, qui sert le
+  Service Worker réellement déployé.
 
 ### Les calculs semblent incorrects
 

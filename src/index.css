@@ -41,6 +41,15 @@
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
 }
 
+/* Neutralise le pull-to-refresh de Chrome Android. En mode installé il n'y a
+   plus de barre d'URL pour signaler le rechargement, et aucun état de séance
+   n'est persisté : un geste de défilement un peu ample effacerait chronomètre,
+   tours, séries et bilans, sans confirmation possible. */
+html,
+body {
+  overscroll-behavior-y: contain;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',

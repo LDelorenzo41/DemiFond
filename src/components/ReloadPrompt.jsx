@@ -9,10 +9,15 @@ const UPDATE_CHECK_INTERVAL = 60 * 60 * 1000; // 1 h
  * - « prête hors ligne » : signal indispensable avant de quitter le Wi-Fi de
  *   l'établissement pour le stade.
  * - « nouvelle version » : mise à jour appliquée UNIQUEMENT sur clic. Le bouton
- *   est désactivé tant qu'un chronomètre tourne, car la mise à jour recharge la
- *   page et l'état de la séance n'est conservé qu'en mémoire.
+ *   est désactivé tant qu'un chronomètre tourne, et une confirmation est demandée
+ *   dès qu'il y a une séance à perdre : la mise à jour recharge la page et rien
+ *   n'est persisté.
+ *
+ * Rien n'est affiché pendant une course : le bouton de passage occupe le bas de
+ * l'écran et une frappe destinée à enregistrer un tour ne doit pas atterrir sur
+ * « OK ». Les états sont conservés par le hook, le message revient à l'arrêt.
  */
-const ReloadPrompt = ({ isRunning = false }) => {
+const ReloadPrompt = ({ isRunning = false, hasSessionData = false }) => {
   const intervalRef = useRef(null);
 
   const {
@@ -35,6 +40,17 @@ const ReloadPrompt = ({ isRunning = false }) => {
   useEffect(() => () => {
     if (intervalRef.current) clearInterval(intervalRef.current);
   }, []);
+
+  // « Prête hors ligne » est une information, pas une action : elle se referme
+  // seule. « Nouvelle version » attend au contraire une décision.
+  useEffect(() => {
+    if (!offlineReady) return undefined;
+    const timeout = setTimeout(() => setOfflineReady(false), 6000);
+    return () => clearTimeout(timeout);
+  }, [offlineReady, setOfflineReady]);
+
+  // Après les hooks, jamais avant : l'ordre des hooks doit rester stable.
+  if (isRunning) return null;
 
   if (!offlineReady && !needRefresh) return null;
 
@@ -60,7 +76,17 @@ const ReloadPrompt = ({ isRunning = false }) => {
                   ? 'Chronomètre en cours : la mise à jour rechargerait la page'
                   : undefined
               }
-              onClick={() => updateServiceWorker(true)}
+              onClick={() => {
+                if (
+                  !hasSessionData ||
+                  window.confirm(
+                    'La mise à jour recharge la page et efface la séance en cours '
+                      + '(chronomètre, tours, séries, bilans). Continuer ?'
+                  )
+                ) {
+                  updateServiceWorker(true);
+                }
+              }}
             >
               Mettre à jour
             </button>

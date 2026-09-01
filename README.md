@@ -171,6 +171,33 @@ Android, absence de transparence pour iOS) et un script de régénération : voi
 ⚠️ Toute icône déclarée dans le manifeste doit exister : `npm run build` échoue
 sinon (`scripts/check-precache.mjs`).
 
+## 🧭 Compatibilité navigateurs
+
+L'application vise explicitement les **iPad Air 2**, encore courants en
+établissement, y compris ceux restés sous **iOS 12** (Safari 12.1).
+
+C'est plus ancien que ce que Vite cible par défaut (Safari 14) : sans réglage,
+React 18 émet `??` et `?.`, que Safari 12 ne sait pas analyser. Le module entier
+est alors rejeté et l'écran reste **blanc**, sans message. D'où, dans
+`vite.config.js` :
+
+```js
+build: {
+  target: ['es2019', 'safari12'],
+  cssTarget: ['safari12'],
+}
+```
+
+`npm run build` échoue si du code incompatible réapparaît
+(`scripts/check-browser-target.mjs`) — une montée de version de dépendance ne
+peut donc pas recasser ces iPad en silence.
+
+`Promise.allSettled` (Safari 13) est comblé par un court polyfill dans
+`index.html`, car le helper de préchargement de Vite s'en sert.
+
+En cas de panne au démarrage, l'application n'affiche jamais une page blanche :
+un écran de diagnostic indique la cause et propose de vider les caches.
+
 ## 📐 Architecture technique
 
 ### Structure du projet
@@ -188,7 +215,8 @@ DemiFond/
 │   ├── robots.txt
 │   └── vite.svg
 ├── scripts/
-│   └── check-precache.mjs  # Garde-fou build : précache et icônes complets
+│   ├── check-precache.mjs  # Garde-fou build : précache et icônes complets
+│   └── check-browser-target.mjs # Garde-fou build : compatibilité Safari 12.1
 ├── src/
 │   ├── components/
 │   │   ├── TopBanner.jsx   # Sélecteurs principaux

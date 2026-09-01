@@ -3,12 +3,11 @@ import React, { useState } from 'react';
 /**
  * Bandeau d'installation, affiché uniquement quand l'app n'est pas déjà installée.
  *
- * Rendu comme frère de `.top-banner` (et non dans `.banner-content`, dont la
- * grille est figée à 3 colonnes en paysage iPad) : la mise en page existante
- * n'est donc pas touchée. Le bandeau disparaît définitivement une fois
- * l'application installée ou l'invitation refusée.
+ * Affiché en barre fixe en bas de l'écran, donc hors du flux : il ne pousse
+ * aucun contenu et ne peut pas décaler les boutons sous le doigt de
+ * l'utilisateur si l'événement d'installation survient en pleine séance.
  */
-const InstallPrompt = ({ canInstall, showIOSHint, onInstall, onDismiss }) => {
+const InstallPrompt = ({ canInstall, showIOSHint, iosBrowser, onInstall, onDismiss }) => {
   const [showIOSSteps, setShowIOSSteps] = useState(false);
 
   if (!canInstall && !showIOSHint) return null;
@@ -57,7 +56,7 @@ const InstallPrompt = ({ canInstall, showIOSHint, onInstall, onDismiss }) => {
           <li>
             Touchez le bouton <strong>Partager</strong>
             <span aria-hidden="true"> ⬆️ </span>
-            dans la barre de Safari.
+            dans {iosBrowser}.
           </li>
           <li>
             Choisissez <strong>« Sur l'écran d'accueil »</strong>.

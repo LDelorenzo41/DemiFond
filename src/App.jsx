@@ -50,9 +50,13 @@ function App() {
   // Installation de la PWA (bandeau d'invitation + instructions iOS)
   const {
     canInstall,
+    canShowIOSHint,
+    canOfferInstall,
+    iosBrowser,
     showBanner,
     promptInstall,
     dismissBanner,
+    reopenBanner,
   } = usePWAInstall();
 
   const handleLapData = (data) => {
@@ -205,10 +209,12 @@ function App() {
         setMarkerDistance={setMarkerDistance}
       />
 
-      {showBanner && (
+      {/* Jamais pendant une course : on n'interrompt pas un chronométrage. */}
+      {showBanner && !isRunning && (
         <InstallPrompt
           canInstall={canInstall}
-          showIOSHint={!canInstall}
+          showIOSHint={canShowIOSHint}
+          iosBrowser={iosBrowser}
           onInstall={promptInstall}
           onDismiss={dismissBanner}
         />
@@ -295,6 +301,18 @@ function App() {
               >
                 EPS Égalité
               </a>
+              {canOfferInstall && (
+                <>
+                  <span className="footer-separator">•</span>
+                  <button
+                    type="button"
+                    className="footer-link footer-link-button"
+                    onClick={reopenBanner}
+                  >
+                    Installer l'application
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>

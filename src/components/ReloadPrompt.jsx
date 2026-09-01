@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 const UPDATE_CHECK_INTERVAL = 60 * 60 * 1000; // 1 h
@@ -13,6 +13,8 @@ const UPDATE_CHECK_INTERVAL = 60 * 60 * 1000; // 1 h
  *   page et l'état de la séance n'est conservé qu'en mémoire.
  */
 const ReloadPrompt = ({ isRunning = false }) => {
+  const intervalRef = useRef(null);
+
   const {
     offlineReady: [offlineReady, setOfflineReady],
     needRefresh: [needRefresh, setNeedRefresh],
@@ -21,14 +23,18 @@ const ReloadPrompt = ({ isRunning = false }) => {
     onRegisteredSW(swUrl, registration) {
       // Sans cela, le navigateur ne revérifie le service worker que lors d'une
       // navigation — ce qui n'arrive jamais dans une SPA sans routeur.
-      if (registration) {
-        setInterval(() => {
-          // Hors ligne, update() rejette : on l'absorbe pour ne pas polluer la console.
-          registration.update().catch(() => {});
-        }, UPDATE_CHECK_INTERVAL);
-      }
+      // Le garde rend l'appel idempotent sous StrictMode (double montage en dev).
+      if (!registration || intervalRef.current) return;
+      intervalRef.current = setInterval(() => {
+        // Hors ligne, update() rejette : on l'absorbe pour ne pas polluer la console.
+        registration.update().catch(() => {});
+      }, UPDATE_CHECK_INTERVAL);
     },
   });
+
+  useEffect(() => () => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+  }, []);
 
   if (!offlineReady && !needRefresh) return null;
 

@@ -137,3 +137,13 @@ input {
   }
 }
 
+
+/* Le point d'entrée « Installer l'application » du pied de page est un bouton
+   (il déclenche une action) mais doit avoir l'apparence des liens voisins. */
+.footer-link-button {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+}

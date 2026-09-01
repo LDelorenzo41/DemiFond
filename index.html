@@ -27,6 +27,25 @@
          le contenu ne passe pas dessous. Aucun safe-area à gérer, donc aucune régression. -->
     <meta name="apple-mobile-web-app-status-bar-style" content="black" />
     <meta name="apple-mobile-web-app-title" content="DemiFond" />
+
+    <!-- Capture précoce de beforeinstallprompt.
+         Chrome peut émettre l'événement avant l'exécution du bundle React, qui
+         est un module donc différé — typiquement lors d'une visite répétée, tout
+         étant déjà en cache. Sans cette capture, l'événement est perdu pour de
+         bon et le bouton « Installer » n'apparaît jamais. Ce script doit rester
+         classique (non-module) et inline pour s'exécuter pendant l'analyse du
+         document. src/hooks/usePWAInstall.js lit ensuite window.__pwaInstallEvent. -->
+    <script>
+      window.__pwaInstallEvent = null;
+      window.addEventListener('beforeinstallprompt', function (event) {
+        event.preventDefault();
+        window.__pwaInstallEvent = event;
+        window.dispatchEvent(new Event('pwa-install-available'));
+      });
+      window.addEventListener('appinstalled', function () {
+        window.__pwaInstallEvent = null;
+      });
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -9,7 +9,26 @@
 [build.environment]
   NODE_VERSION = "18"
 
-# Règles de redirection pour SPA (Single Page Application)
+# ⚠️ L'ordre des règles compte : Netlify les évalue de haut en bas.
+# Une redirection non forcée ne s'applique QUE si aucun fichier statique ne
+# correspond — c'est ce qui permet à la règle SPA ci-dessous de coexister avec
+# /assets/*, /sw.js ou /manifest.json.
+
+# Un asset haché absent (déploiement en cours, référence périmée) doit renvoyer
+# un vrai 404. Sans cette règle, la règle SPA le sert en HTTP 200 avec le HTML de
+# index.html : l'import dynamique échoue alors sur une erreur de type MIME
+# incompréhensible, et une icône manquante devient invisible au diagnostic.
+[[redirects]]
+  from = "/assets/*"
+  to = "/assets/:splat"
+  status = 404
+
+[[redirects]]
+  from = "/icons/*"
+  to = "/icons/:splat"
+  status = 404
+
+# Règle de redirection pour SPA (Single Page Application) — doit rester en dernier
 [[redirects]]
   from = "/*"
   to = "/index.html"
@@ -35,21 +54,36 @@
     Cache-Control = "public, max-age=0, must-revalidate"
     Service-Worker-Allowed = "/"
 
-# Headers pour les fichiers statiques (cache agressif)
+# index.html ne doit jamais être figé : c'est lui qui référence les assets hachés
+# et qui permet de découvrir un nouveau Service Worker.
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# Headers pour les fichiers statiques (cache agressif) — noms hachés, donc immuables
 [[headers]]
   for = "/assets/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
-# Headers pour le manifest
+# Headers pour le manifeste
 [[headers]]
-  for = "/manifest.webmanifest"
+  for = "/manifest.json"
   [headers.values]
     Content-Type = "application/manifest+json"
     Cache-Control = "public, max-age=0, must-revalidate"
 
-# Headers pour les icônes
+# Headers pour les icônes.
+# Volontairement PAS "immutable" : contrairement aux fichiers de /assets/, les
+# icônes gardent le même nom d'une version à l'autre. Un cache d'un an rendrait
+# tout changement de logo invisible pendant douze mois.
 [[headers]]
   for = "/icons/*"
   [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
+    Cache-Control = "public, max-age=86400"
+
+[[headers]]
+  for = "/apple-touch-icon.png"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"

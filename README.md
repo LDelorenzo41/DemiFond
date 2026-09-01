@@ -37,9 +37,11 @@ Application web progressive (PWA) pour le suivi d'allure de course à pied, con�
 ### Capacités PWA
 
 - ✅ Fonctionne 100% hors ligne après le premier chargement
-- ✅ Installable sur l'écran d'accueil (mobile/tablette)
-- ✅ Service Worker avec cache automatique
-- ✅ Mise à jour automatique de l'application
+- ✅ Installable sur l'écran d'accueil (mobile/tablette/ordinateur)
+- ✅ Bandeau d'installation intégré, avec instructions dédiées pour iOS
+- ✅ Service Worker Workbox : tout est précaché (bundle, styles, icônes, export PDF)
+- ✅ Mise à jour proposée à l'utilisateur, jamais imposée : aucun rechargement
+  intempestif ne peut interrompre un chronomètre en cours
 - ✅ Optimisée pour les performances
 
 ## 🚀 Installation et lancement
@@ -97,10 +99,29 @@ npm run preview
 
 ### Installation sur smartphone/tablette
 
-1. Ouvrez l'application dans votre navigateur
-2. Appuyez sur le bouton "Installer" ou "Ajouter à l'écran d'accueil"
-3. L'application est maintenant disponible comme une app native
-4. Utilisable sans connexion internet !
+**Android / Chrome / Edge / ordinateur**
+
+1. Ouvrez l'application dans votre navigateur.
+2. Un bandeau « Installez DemiFond… » apparaît sous les sélecteurs : appuyez sur
+   **Installer**. (Le bouton d'installation de la barre d'adresse fonctionne aussi.)
+3. L'application est disponible comme une app native.
+
+**iPhone / iPad (Safari)**
+
+iOS ne permet à aucun site de déclencher l'installation lui-même. Le bandeau
+affiche donc **Comment faire ?**, qui déplie la marche à suivre :
+
+1. Touchez le bouton **Partager** dans la barre de Safari.
+2. Choisissez **« Sur l'écran d'accueil »**.
+3. Confirmez avec **« Ajouter »**.
+
+### Utilisation hors connexion
+
+Chargez l'application **une fois** en étant connecté. Le message
+« ✅ DemiFond est prête : vous pouvez l'utiliser sans connexion » confirme que
+tout est en cache — y compris l'export PDF. Vous pouvez alors couper le réseau :
+lancement, chronomètre, séries, tableau d'allure et export PDF restent
+opérationnels.
 
 ### Mode d'emploi rapide
 
@@ -142,11 +163,13 @@ Modifiez les variables CSS dans `src/index.css` :
 
 ### Icônes PWA
 
-Remplacez les icônes dans `public/icons/` :
-- `icon-192.png` (192×192 px)
-- `icon-512.png` (512×512 px)
+Les icônes vivent dans `public/icons/` et sont déclarées dans
+`public/manifest.json`. Elles ont des contraintes précises (zone de sécurité
+Android, absence de transparence pour iOS) et un script de régénération : voir
+**[docs/ICONS.md](docs/ICONS.md)**.
 
-Générateur recommandé : https://www.pwabuilder.com/imageGenerator
+⚠️ Toute icône déclarée dans le manifeste doit exister : `npm run build` échoue
+sinon (`scripts/check-precache.mjs`).
 
 ## 📐 Architecture technique
 
@@ -154,25 +177,37 @@ Générateur recommandé : https://www.pwabuilder.com/imageGenerator
 
 ```
 DemiFond/
+├── design/
+│   └── logo-512.png        # Master du logo (hors publicDir : non déployé)
+├── docs/
+│   └── ICONS.md            # Contraintes et régénération des icônes
 ├── public/
-│   ├── icons/              # Icônes PWA
+│   ├── icons/              # Icônes PWA (any + maskable, 192 et 512)
+│   ├── apple-touch-icon.png# Icône iOS (180×180, sans transparence)
+│   ├── manifest.json       # Manifeste : SOURCE DE VÉRITÉ UNIQUE
 │   ├── robots.txt
 │   └── vite.svg
+├── scripts/
+│   └── check-precache.mjs  # Garde-fou build : précache et icônes complets
 ├── src/
 │   ├── components/
 │   │   ├── TopBanner.jsx   # Sélecteurs principaux
 │   │   ├── LeftPanel.jsx   # Paramètres exercice
 │   │   ├── CenterPanel.jsx # Course en direct
-│   │   └── RightPanel.jsx  # Tableau et stats
+│   │   ├── RightPanel.jsx  # Tableau et stats
+│   │   ├── InstallPrompt.jsx # Bandeau d'installation (+ aide iOS)
+│   │   └── ReloadPrompt.jsx  # « Prête hors ligne » / « Nouvelle version »
 │   ├── hooks/
-│   │   └── useTimer.js     # Hook chronomètre
+│   │   ├── useTimer.js     # Hook chronomètre
+│   │   └── usePWAInstall.js# Capture de beforeinstallprompt
 │   ├── utils/
 │   │   └── calculations.js # Logique de calcul
 │   ├── App.jsx
 │   ├── App.css
 │   ├── main.jsx
 │   └── index.css
-├── index.html
+├── index.html              # Un SEUL <link rel="manifest">
+├── netlify.toml            # Redirections et en-têtes
 ├── vite.config.js          # Config Vite + PWA
 └── package.json
 ```
@@ -235,15 +270,28 @@ Toutes les formules sont dans `src/utils/calculations.js` :
 
 ### L'app ne s'installe pas
 
-- Vérifiez que vous utilisez HTTPS (ou localhost)
-- Assurez-vous que le manifest.json est accessible
-- Consultez la console du navigateur (F12)
+- Vérifiez que vous utilisez HTTPS (ou localhost) : c'est une condition absolue.
+- Ouvrez **DevTools > Application > Manifest** : aucune erreur ne doit s'afficher
+  et les icônes doivent apparaître dans l'aperçu.
+- Vérifiez qu'`index.html` ne contient **qu'un seul** `<link rel="manifest">` :
+  les navigateurs ignorent silencieusement tous les suivants. `npm run build`
+  échoue s'il y en a plusieurs.
+- Sur iPhone/iPad, l'installation est forcément manuelle (Partager > Sur l'écran
+  d'accueil) : aucun site ne peut la déclencher.
+- Si l'app est déjà installée, le bandeau ne s'affiche plus — c'est voulu.
 
 ### Le mode hors ligne ne fonctionne pas
 
-- Actualisez la page après le premier chargement
-- Vérifiez que le Service Worker est enregistré (DevTools > Application > Service Workers)
-- Videz le cache et rechargez
+- Chargez la page **une fois** en ligne et attendez le message
+  « DemiFond est prête ».
+- Vérifiez que le Service Worker est enregistré et **activé**
+  (DevTools > Application > Service Workers).
+- DevTools > Application > Cache Storage doit contenir `index.html`, le bundle
+  `assets/index-*.js` et la feuille `assets/index-*.css`.
+- En développement, le Service Worker est **désactivé par défaut**. Pour tester
+  l'installabilité ou le hors-ligne pendant `dev` : `VITE_PWA_DEV=true npm run dev`.
+  La recette de référence reste `npm run build && npm run preview`, qui sert le
+  Service Worker réellement déployé.
 
 ### Les calculs semblent incorrects
 

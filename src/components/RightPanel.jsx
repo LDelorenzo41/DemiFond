@@ -781,8 +781,16 @@ const RightPanel = ({
     const link = document.createElement('a');
     link.href = url;
     link.download = `running-pace-${new Date().toISOString().split('T')[0]}.json`;
+    link.rel = 'noopener';
+
+    // L'URL blob doit rester valide le temps que le navigateur lise le fichier :
+    // la révoquer dans la même tâche que le clic fait échouer le téléchargement
+    // sur Safari. En PWA installée sur iOS, un export raté est bloquant, faute de
+    // barre d'adresse et de bouton retour pour s'en sortir.
+    document.body.appendChild(link);
     link.click();
-    URL.revokeObjectURL(url);
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
   return (

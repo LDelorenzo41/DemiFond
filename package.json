@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node scripts/check-precache.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -19,4 +19,3 @@
     "vite-plugin-pwa": "^0.17.4"
   }
 }
-

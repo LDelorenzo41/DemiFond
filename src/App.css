@@ -2553,3 +2553,214 @@
     width: 100%;
   }
 }
+
+/* ========================================
+   PWA — bandeau d'installation et messages
+   de service worker.
+   Ajouts strictement additifs : aucun sélecteur
+   existant n'est modifié.
+
+   Le bandeau est en position fixed, donc HORS DU
+   FLUX. Deux raisons :
+   - il ne peut pas s'ajouter au budget de hauteur
+     calibré pour l'iPad Air 2 en paysage (768 px) ;
+   - beforeinstallprompt peut survenir à n'importe
+     quel moment. Dans le flux, son apparition
+     décalerait les boutons de 59 px sous le doigt
+     de l'enseignant en train de chronométrer.
+   ======================================== */
+
+/* Pile fixe en bas d'écran. Les deux surfaces PWA y sont empilées plutôt que
+   superposées : quelle que soit la hauteur du bandeau (les étapes iOS le font
+   grandir), le message de service worker reste entièrement visible. */
+.pwa-stack {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 150; /* au-dessus de .top-banner (100), sous les modales (1000) */
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  /* Respecte la barre d'accueil des iPhone sans bouton. */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  /* La pile occupe toute la largeur : sans cela elle intercepterait les clics
+     destinés à l'application dans les zones vides. */
+  pointer-events: none;
+}
+
+.pwa-stack > * {
+  pointer-events: auto;
+}
+
+.install-banner {
+  background: #eff6ff;
+  border-top: 1px solid #bfdbfe;
+  color: var(--color-text);
+  padding: var(--spacing-sm) var(--spacing-md);
+  box-shadow: 0 -2px 8px rgb(0 0 0 / 0.08);
+  max-height: 45vh;
+  overflow-y: auto; /* les étapes iOS ne peuvent pas déborder de l'écran */
+}
+
+.install-banner-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.install-banner-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.install-banner-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+
+.install-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-shrink: 0;
+}
+
+.btn-install {
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  min-height: 40px;
+  transition: background-color 0.15s ease;
+}
+
+.btn-install:hover {
+  background: var(--color-secondary);
+}
+
+.btn-install-dismiss {
+  background: transparent;
+  border: none;
+  color: var(--color-text-light);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: var(--radius-sm);
+  min-height: 40px;
+  min-width: 40px;
+}
+
+.btn-install-dismiss:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--color-text);
+}
+
+.install-ios-steps {
+  max-width: 1400px;
+  margin: var(--spacing-sm) auto 0;
+  padding-left: 2.25rem;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+/* Messages du service worker : dans la pile fixe, ils ne déplacent aucun contenu. */
+.pwa-toast {
+  align-self: flex-end;
+  margin: 0 var(--spacing-md);
+  max-width: min(360px, calc(100vw - 2 * var(--spacing-md)));
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  font-size: 0.9rem;
+}
+
+.pwa-toast-text {
+  line-height: 1.4;
+}
+
+.pwa-toast-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+}
+
+.btn-pwa-toast {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  border-radius: var(--radius-md);
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 40px;
+}
+
+.btn-pwa-toast:hover:not(:disabled) {
+  background: var(--color-background);
+}
+
+.btn-pwa-toast-primary {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: white;
+}
+
+.btn-pwa-toast-primary:hover:not(:disabled) {
+  background: var(--color-secondary);
+  border-color: var(--color-secondary);
+}
+
+.btn-pwa-toast:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Mobile : icône et texte restent sur la même ligne, les boutons passent
+   en dessous — évite tout débordement horizontal sur les petits écrans. */
+@media (max-width: 768px) {
+  .install-banner-content {
+    flex-wrap: wrap;
+  }
+
+  /* .install-banner-text garde `flex: 1` (base 0) : sans cela sa taille
+     hypothétique vaut celle de son contenu et l'icône se retrouve seule
+     sur la première ligne. */
+  .install-banner-actions {
+    flex-basis: 100%;
+    justify-content: flex-end;
+  }
+
+  .install-ios-steps {
+    padding-left: 1.25rem;
+  }
+
+  .pwa-toast {
+    align-self: stretch;
+    max-width: none;
+  }
+}
+
+/* Rien de tout cela ne doit apparaître à l'impression. */
+@media print {
+  .pwa-stack {
+    display: none !important;
+  }
+}

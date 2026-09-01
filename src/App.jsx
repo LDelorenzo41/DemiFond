@@ -3,6 +3,9 @@ import TopBanner from './components/TopBanner';
 import LeftPanel from './components/LeftPanel';
 import CenterPanel from './components/CenterPanel';
 import RightPanel from './components/RightPanel';
+import InstallPrompt from './components/InstallPrompt';
+import ReloadPrompt from './components/ReloadPrompt';
+import usePWAInstall from './hooks/usePWAInstall';
 import './App.css';
 
 /**
@@ -43,6 +46,18 @@ function App() {
 
   // Ref pour accéder aux fonctions de CenterPanel
   const centerPanelRef = useRef();
+
+  // Installation de la PWA (bandeau d'invitation + instructions iOS)
+  const {
+    canInstall,
+    canShowIOSHint,
+    canOfferInstall,
+    iosBrowser,
+    showBanner,
+    promptInstall,
+    dismissBanner,
+    reopenBanner,
+  } = usePWAInstall();
 
   const handleLapData = (data) => {
     setLapData(prev => [...prev, data]);
@@ -275,11 +290,45 @@ function App() {
               >
                 EPS Égalité
               </a>
+              {canOfferInstall && (
+                <>
+                  <span className="footer-separator">•</span>
+                  <button
+                    type="button"
+                    className="footer-link footer-link-button"
+                    onClick={reopenBanner}
+                  >
+                    Installer l'application
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
       </footer>
 
+      {/* Pile fixe en bas d'écran : le message de service worker et le bandeau
+          d'installation s'empilent au lieu de se recouvrir, quelle que soit la
+          hauteur de l'un ou de l'autre. */}
+      <div className="pwa-stack">
+        <ReloadPrompt
+          isRunning={isRunning}
+          hasSessionData={
+            isRunning || isRecoveryActive || lapData.length > 0 || Boolean(seriesConfig)
+          }
+        />
+
+        {/* Jamais pendant une course : on n'interrompt pas un chronométrage. */}
+        {showBanner && !isRunning && (
+          <InstallPrompt
+            canInstall={canInstall}
+            showIOSHint={canShowIOSHint}
+            iosBrowser={iosBrowser}
+            onInstall={promptInstall}
+            onDismiss={dismissBanner}
+          />
+        )}
+      </div>
     </div>
   );
 }

@@ -106,6 +106,23 @@ Les déploiements **suivants** n'ont plus ce comportement : le message
 « Une nouvelle version est disponible » prend le relais et l'utilisateur décide
 du moment.
 
+**Symptôme typique pendant cette transition** : le site paraît « ne pas avoir été
+déployé » — pas de bandeau d'installation, anciennes icônes — alors que Netlify
+affiche bien le nouveau build. Ce n'est pas un échec de déploiement, c'est
+l'ancien service worker qui sert sa propre copie.
+
+**Débloquer un appareil tout de suite :**
+
+| Appareil | Manœuvre |
+|---|---|
+| Ordinateur | Fermer **tous** les onglets du site, puis rouvrir. Un F5, même forcé, ne suffit pas. |
+| Android / iOS (app installée) | Fermer l'app depuis le sélecteur d'applications (balayage), puis la relancer. |
+| Diagnostic / dernier recours | DevTools → **Application** → **Service Workers** → **Unregister**, puis recharger. |
+
+Pour vérifier quelle version est réellement servie : DevTools → Application →
+Service Workers affiche le service worker actif et celui en attente
+(*waiting to activate*).
+
 ### Points à ne pas casser
 
 - **Ne jamais ajouter un second `<link rel="manifest">`** : seul le premier est lu.

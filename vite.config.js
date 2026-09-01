@@ -3,6 +3,17 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  // Par défaut Vite s'arrête à Safari 14, ce qui laisse passer `??` et `?.` —
+  // React 18 en émet dans son propre code. Sur un iPad Air 2 en iOS 12.4
+  // (Safari 12.1), le bundle est alors rejeté par une erreur de syntaxe : le
+  // module entier ne se charge pas et l'écran reste blanc, sans rien indiquer.
+  // Ces iPad sont une cible réelle de l'application (matériel encore courant en
+  // établissement scolaire), d'où l'abaissement explicite de la cible.
+  build: {
+    target: ['es2019', 'safari12'],
+    cssTarget: ['safari12'],
+  },
+
   plugins: [
     react(),
     VitePWA({

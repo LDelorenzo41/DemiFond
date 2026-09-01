@@ -56,6 +56,20 @@
          l'utilisateur ne peut ni comprendre ni réparer. -->
     <script>
       (function () {
+        // Promise.allSettled n'existe qu'à partir de Safari 13, alors que le
+        // helper de préchargement de Vite s'en sert pour les imports
+        // dynamiques. Sans ce complément, l'export PDF échouerait sur iOS 12.
+        if (typeof Promise !== 'undefined' && !Promise.allSettled) {
+          Promise.allSettled = function (values) {
+            return Promise.all(Array.prototype.map.call(values, function (p) {
+              return Promise.resolve(p).then(
+                function (value) { return { status: 'fulfilled', value: value }; },
+                function (reason) { return { status: 'rejected', reason: reason }; }
+              );
+            }));
+          };
+        }
+
         var errors = [];
         window.__demifondErrors = errors;
 

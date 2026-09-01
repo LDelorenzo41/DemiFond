@@ -46,6 +46,129 @@
         window.__pwaInstallEvent = null;
       });
     </script>
+
+    <!-- Filet de sécurité de démarrage.
+         Volontairement en JavaScript classique (pas de module, pas de syntaxe
+         moderne) et INLINE : il doit s'exécuter même si le bundle ne se charge
+         pas, et même sur un navigateur trop ancien pour ce bundle.
+         Sur un iPad en mode installé il n'y a ni barre d'adresse ni console :
+         sans ce filet, une panne au démarrage se résume à une page blanche que
+         l'utilisateur ne peut ni comprendre ni réparer. -->
+    <script>
+      (function () {
+        var errors = [];
+        window.__demifondErrors = errors;
+
+        function record(label, detail) {
+          errors.push(label + ' : ' + detail);
+        }
+
+        // La phase de capture attrape aussi les échecs de chargement de
+        // ressources (script, css), qui ne remontent pas jusqu'à window.
+        window.addEventListener('error', function (event) {
+          if (event && event.target && event.target !== window && event.target.src) {
+            record('Ressource non chargée', event.target.src);
+          } else if (event && event.error && event.error.stack) {
+            record('Erreur', event.error.stack);
+          } else if (event && event.message) {
+            record('Erreur', event.message + ' (' + (event.filename || '?') + ':' + (event.lineno || '?') + ')');
+          }
+        }, true);
+
+        window.addEventListener('unhandledrejection', function (event) {
+          var r = event && event.reason;
+          record('Promesse rejetée', (r && (r.stack || r.message)) || String(r));
+        });
+
+        function esc(text) {
+          return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        function collectState(done) {
+          var lines = [
+            'Adresse : ' + location.href,
+            'Navigateur : ' + navigator.userAgent,
+            'En ligne : ' + (navigator.onLine ? 'oui' : 'non'),
+            'Mode installé : ' + (navigator.standalone === true ? 'oui (iOS)' : 'non ou inconnu')
+          ];
+          if (!('serviceWorker' in navigator)) {
+            lines.push('Service worker : non supporté');
+            return done(lines);
+          }
+          lines.push('Service worker contrôleur : ' + (navigator.serviceWorker.controller ? 'oui' : 'non'));
+          var finish = function () { done(lines); };
+          try {
+            navigator.serviceWorker.getRegistrations().then(function (regs) {
+              lines.push('Enregistrements : ' + regs.length);
+              if (!window.caches) { finish(); return; }
+              caches.keys().then(function (keys) {
+                lines.push('Caches : ' + (keys.join(', ') || 'aucun'));
+                finish();
+              })['catch'](finish);
+            })['catch'](finish);
+          } catch (e) { finish(); }
+        }
+
+        function repair() {
+          var done = function () { location.reload(); };
+          try {
+            var jobs = [];
+            if ('serviceWorker' in navigator) {
+              jobs.push(navigator.serviceWorker.getRegistrations().then(function (regs) {
+                return Promise.all(regs.map(function (r) { return r.unregister(); }));
+              }));
+            }
+            if (window.caches) {
+              jobs.push(caches.keys().then(function (keys) {
+                return Promise.all(keys.map(function (k) { return caches['delete'](k); }));
+              }));
+            }
+            Promise.all(jobs).then(done)['catch'](done);
+            setTimeout(done, 4000); // ne jamais rester bloqué
+          } catch (e) { done(); }
+        }
+
+        var shown = false;
+        window.__demifondShowDiagnostic = function (extra) {
+          if (shown) return;
+          shown = true;
+          if (extra) record('Erreur', (extra && (extra.stack || extra.message)) || String(extra));
+
+          collectState(function (state) {
+            var report = errors.concat([''], state).join('\n');
+            document.body.innerHTML =
+              '<div style="font:14px -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;'
+              + 'max-width:640px;margin:0 auto;padding:24px;color:#1e293b;line-height:1.5">'
+              + '<h1 style="font-size:20px;margin:0 0 12px">DemiFond n\u2019a pas pu démarrer</h1>'
+              + '<p style="margin:0 0 16px">C\u2019est presque toujours un cache resté dans un mauvais '
+              + 'état après une mise à jour. Le bouton ci-dessous vide ce cache et relance l\u2019application. '
+              + 'Aucun réglage n\u2019est perdu.</p>'
+              + '<button id="demifond-repair" style="background:#1e40af;color:#fff;border:0;'
+              + 'border-radius:8px;padding:14px 20px;font-size:16px;font-weight:600;cursor:pointer;'
+              + 'width:100%;min-height:48px">Réparer et relancer</button>'
+              + '<p style="margin:20px 0 6px;font-weight:600">Détail technique</p>'
+              + '<textarea readonly style="width:100%;height:220px;font:12px ui-monospace,Menlo,Consolas,monospace;'
+              + 'border:1px solid #e2e8f0;border-radius:8px;padding:10px;color:#334155;background:#f8fafc">'
+              + esc(report) + '</textarea>'
+              + '<p style="margin:8px 0 0;color:#64748b;font-size:13px">Si le problème persiste, '
+              + 'envoyez ce texte : il indique la cause exacte.</p>'
+              + '</div>';
+            var btn = document.getElementById('demifond-repair');
+            if (btn) btn.addEventListener('click', function () {
+              btn.disabled = true;
+              btn.textContent = 'Réparation…';
+              repair();
+            });
+          });
+        };
+
+        // Si React n'a rien rendu au bout de 10 s, c'est une panne, pas une lenteur.
+        setTimeout(function () {
+          var root = document.getElementById('root');
+          if (root && root.childNodes.length === 0) window.__demifondShowDiagnostic(null);
+        }, 10000);
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

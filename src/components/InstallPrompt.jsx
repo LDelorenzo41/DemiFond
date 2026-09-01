@@ -37,7 +37,7 @@ const InstallPrompt = ({ canInstall, showIOSHint, iosBrowser, onInstall, onDismi
             onClick={handleInstall}
             aria-expanded={canInstall ? undefined : showIOSSteps}
           >
-            {canInstall ? 'Installer' : 'Comment faire ?'}
+            {canInstall ? "Installer l'application" : 'Comment faire ?'}
           </button>
           <button
             type="button"

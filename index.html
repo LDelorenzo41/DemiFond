@@ -2,17 +2,34 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-    <link rel="apple-touch-icon" href="/logo-192.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#1e40af" />
-    <meta name="description" content="Application PWA pour suivre votre allure de course en temps réel" />
-    <link rel="manifest" href="/manifest.json" />
+
     <title>DemiFond - Tracker d'allure</title>
+    <meta name="description" content="Application PWA pour suivre votre allure de course en temps réel" />
+    <meta name="theme-color" content="#1e40af" />
+
+    <!-- Manifeste : source de vérité unique (public/manifest.json).
+         Ne jamais déclarer un second lien de manifeste : les navigateurs ne lisent
+         que le premier et ignorent silencieusement les suivants. La génération
+         automatique par vite-plugin-pwa est désactivée pour cette raison
+         (manifest: false dans vite.config.js). -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+
+    <!-- iOS : Safari ignore le manifeste pour l'icône et le mode plein écran -->
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <!-- "black" (et non "black-translucent") : la barre d'état reste réservée par iOS,
+         le contenu ne passe pas dessous. Aucun safe-area à gérer, donc aucune régression. -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="apple-mobile-web-app-title" content="DemiFond" />
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
-

@@ -3,6 +3,9 @@ import TopBanner from './components/TopBanner';
 import LeftPanel from './components/LeftPanel';
 import CenterPanel from './components/CenterPanel';
 import RightPanel from './components/RightPanel';
+import InstallPrompt from './components/InstallPrompt';
+import ReloadPrompt from './components/ReloadPrompt';
+import usePWAInstall from './hooks/usePWAInstall';
 import './App.css';
 
 /**
@@ -43,6 +46,14 @@ function App() {
 
   // Ref pour accéder aux fonctions de CenterPanel
   const centerPanelRef = useRef();
+
+  // Installation de la PWA (bandeau d'invitation + instructions iOS)
+  const {
+    canInstall,
+    showBanner,
+    promptInstall,
+    dismissBanner,
+  } = usePWAInstall();
 
   const handleLapData = (data) => {
     setLapData(prev => [...prev, data]);
@@ -194,6 +205,15 @@ function App() {
         setMarkerDistance={setMarkerDistance}
       />
 
+      {showBanner && (
+        <InstallPrompt
+          canInstall={canInstall}
+          showIOSHint={!canInstall}
+          onInstall={promptInstall}
+          onDismiss={dismissBanner}
+        />
+      )}
+
       <div className="main-content">
         <LeftPanel
           duration={duration}
@@ -280,6 +300,7 @@ function App() {
         </div>
       </footer>
 
+      <ReloadPrompt isRunning={isRunning} />
     </div>
   );
 }

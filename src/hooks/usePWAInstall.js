@@ -8,16 +8,63 @@ const BANNER_DISMISSED_KEY = 'demifond.installBannerDismissedAt';
 const DISMISS_DAYS = 30;
 
 /**
+ * Interroge une media query sans jamais lever.
+ *
+ * `window.matchMedia` peut manquer, et sur Safari antérieur à 14 l'objet
+ * retourné n'hérite pas d'EventTarget : il n'a que addListener/removeListener.
+ * Une exception ici casserait le rendu de toute l'application.
+ */
+const safeMatchMedia = (query) => {
+  try {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return null;
+    return window.matchMedia(query);
+  } catch {
+    return null;
+  }
+};
+
+const mediaMatches = (query) => {
+  const mql = safeMatchMedia(query);
+  return Boolean(mql && mql.matches);
+};
+
+/**
+ * S'abonne aux changements d'une media query et renvoie la fonction de
+ * désabonnement. Retombe sur l'API historique addListener quand la moderne
+ * est absente (Safari < 14), et ne fait rien si aucune n'existe.
+ */
+const subscribeToMedia = (mql, handler) => {
+  if (!mql) return () => {};
+  try {
+    if (typeof mql.addEventListener === 'function') {
+      mql.addEventListener('change', handler);
+      return () => mql.removeEventListener('change', handler);
+    }
+    if (typeof mql.addListener === 'function') {
+      mql.addListener(handler);
+      return () => mql.removeListener(handler);
+    }
+  } catch {
+    // Rien à faire : l'absence de notification n'empêche pas l'app de tourner.
+  }
+  return () => {};
+};
+
+/**
  * Vrai quand l'app tourne déjà en mode installé (Android/desktop ou iOS).
  */
 const detectStandalone = () => {
   if (typeof window === 'undefined') return false;
-  return (
-    window.matchMedia('(display-mode: standalone)').matches ||
-    window.matchMedia('(display-mode: fullscreen)').matches ||
-    window.matchMedia('(display-mode: minimal-ui)').matches ||
-    window.navigator.standalone === true // iOS
-  );
+  try {
+    return (
+      mediaMatches('(display-mode: standalone)') ||
+      mediaMatches('(display-mode: fullscreen)') ||
+      mediaMatches('(display-mode: minimal-ui)') ||
+      window.navigator.standalone === true // iOS
+    );
+  } catch {
+    return false;
+  }
 };
 
 /**
@@ -30,6 +77,7 @@ const detectStandalone = () => {
 const detectIOS = () => {
   if (typeof window === 'undefined') return { isIOS: false, iosBrowser: 'Safari' };
 
+  try {
   const ua = window.navigator.userAgent;
   const isIPhoneOrIPod = /iPhone|iPod/.test(ua);
   // Les iPad récents se déclarent « MacIntel » : le tactile les distingue d'un Mac.
@@ -46,6 +94,9 @@ const detectIOS = () => {
         : 'Safari';
 
   return { isIOS: isIPhoneOrIPod || isIPadOS, iosBrowser };
+  } catch {
+    return { isIOS: false, iosBrowser: 'Safari' };
+  }
 };
 
 const readDismissedAt = () => {
@@ -99,21 +150,23 @@ export default function usePWAInstall() {
 
     // Le passage en mode installé peut aussi se produire sans événement
     // `appinstalled` (ouverture depuis l'icône de l'écran d'accueil).
-    const displayModeQuery = window.matchMedia('(display-mode: standalone)');
     const handleDisplayModeChange = (event) => {
-      if (event.matches) setIsInstalled(true);
+      if (event && event.matches) setIsInstalled(true);
     };
+    const unsubscribeMedia = subscribeToMedia(
+      safeMatchMedia('(display-mode: standalone)'),
+      handleDisplayModeChange
+    );
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('pwa-install-available', handleAvailable);
     window.addEventListener('appinstalled', handleAppInstalled);
-    displayModeQuery.addEventListener('change', handleDisplayModeChange);
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('pwa-install-available', handleAvailable);
       window.removeEventListener('appinstalled', handleAppInstalled);
-      displayModeQuery.removeEventListener('change', handleDisplayModeChange);
+      unsubscribeMedia();
     };
   }, []);
 

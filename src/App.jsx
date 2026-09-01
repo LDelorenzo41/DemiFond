@@ -5,6 +5,7 @@ import CenterPanel from './components/CenterPanel';
 import RightPanel from './components/RightPanel';
 import InstallPrompt from './components/InstallPrompt';
 import ReloadPrompt from './components/ReloadPrompt';
+import PWABoundary from './components/PWABoundary';
 import usePWAInstall from './hooks/usePWAInstall';
 import './App.css';
 
@@ -311,23 +312,25 @@ function App() {
           d'installation s'empilent au lieu de se recouvrir, quelle que soit la
           hauteur de l'un ou de l'autre. */}
       <div className="pwa-stack">
-        <ReloadPrompt
-          isRunning={isRunning}
-          hasSessionData={
-            isRunning || isRecoveryActive || lapData.length > 0 || Boolean(seriesConfig)
-          }
-        />
-
-        {/* Jamais pendant une course : on n'interrompt pas un chronométrage. */}
-        {showBanner && !isRunning && (
-          <InstallPrompt
-            canInstall={canInstall}
-            showIOSHint={canShowIOSHint}
-            iosBrowser={iosBrowser}
-            onInstall={promptInstall}
-            onDismiss={dismissBanner}
+        <PWABoundary>
+          <ReloadPrompt
+            isRunning={isRunning}
+            hasSessionData={
+              isRunning || isRecoveryActive || lapData.length > 0 || Boolean(seriesConfig)
+            }
           />
-        )}
+
+          {/* Jamais pendant une course : on n'interrompt pas un chronométrage. */}
+          {showBanner && !isRunning && (
+            <InstallPrompt
+              canInstall={canInstall}
+              showIOSHint={canShowIOSHint}
+              iosBrowser={iosBrowser}
+              onInstall={promptInstall}
+              onDismiss={dismissBanner}
+            />
+          )}
+        </PWABoundary>
       </div>
     </div>
   );
